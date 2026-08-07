@@ -1,6 +1,12 @@
-import "dotenv/config";
+import { config } from "dotenv";
 import path from "node:path";
 import { defineConfig } from "prisma/config";
+
+// The app reads `.env.local` (Next.js's own convention), but the Prisma CLI
+// runs standalone and dotenv's default `import "dotenv/config"` only loads
+// plain `.env` — so `prisma migrate dev` silently saw no DATABASE_URL/
+// DIRECT_URL at all until this pointed it at the right file explicitly.
+config({ path: path.join(__dirname, ".env.local") });
 
 /**
  * Prisma 7 config. Connection URLs live here rather than in schema.prisma.
