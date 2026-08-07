@@ -1,26 +1,203 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@plugin "@tailwindcss/typography";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-display);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-muted: var(--success-muted);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-muted: var(--warning-muted);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-muted: var(--info-muted);
+  --color-star: var(--star);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: calc(var(--radius) * 0.75);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.6);
+  --radius-2xl: calc(var(--radius) * 2.2);
+  --radius-3xl: calc(var(--radius) * 2.8);
+  --radius-4xl: calc(var(--radius) * 3.4);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Palette sampled directly from design/ — the reference mockup sheet.
+   Violet #5B2BD0 primary, cool near-white page, pure white cards,
+   near-black navy dashboard sidebar. Flat and bright, no paper texture. */
+:root {
+  --background: oklch(0.978 0.008 286.3); /* #F7F7FD */
+  --foreground: oklch(0.211 0.029 268.8); /* #131826 */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.211 0.029 268.8);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.211 0.029 268.8);
+  /* The one brand colour — every CTA, active nav item, stepper and link. */
+  --primary: oklch(0.467 0.23 286.8); /* #5B2BD0 */
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.965 0.012 290);
+  --secondary-foreground: oklch(0.32 0.045 282);
+  --muted: oklch(0.965 0.01 288);
+  --muted-foreground: oklch(0.551 0.023 264.4);
+  /* Violet wash used behind active chips and selected rows. */
+  --accent: oklch(0.944 0.027 297.3); /* #EEE9FD */
+  --accent-foreground: oklch(0.417 0.215 285.8);
+  --destructive: oklch(0.577 0.215 27.3);
+  --border: oklch(0.924 0.016 293.7);
+  --input: oklch(0.924 0.016 293.7);
+  --ring: oklch(0.467 0.23 286.8);
+  /* Status ramp — seat scarcity, match badges, verification states.
+     Each has a saturated base for text/icons and a muted tint for chips. */
+  --success: oklch(0.627 0.17 149.2);
+  --success-foreground: oklch(1 0 0);
+  --success-muted: oklch(0.945 0.045 150);
+  --warning: oklch(0.646 0.194 41.1);
+  --warning-foreground: oklch(1 0 0);
+  --warning-muted: oklch(0.955 0.04 55);
+  --info: oklch(0.546 0.215 262.9);
+  --info-foreground: oklch(1 0 0);
+  --info-muted: oklch(0.95 0.03 265);
+  --star: oklch(0.769 0.165 70.1);
+  --radius: 0.75rem;
+  /* Donut/line chart ramp, ordered to match the admin analytics screen. */
+  --chart-1: oklch(0.467 0.23 286.8);
+  --chart-2: oklch(0.646 0.194 41.1);
+  --chart-3: oklch(0.627 0.17 149.2);
+  --chart-4: oklch(0.546 0.215 262.9);
+  --chart-5: oklch(0.769 0.165 70.1);
+  /* Near-black navy rail with a solid violet active pill. */
+  --sidebar: oklch(0.21 0.032 264.7); /* #111827 */
+  --sidebar-foreground: oklch(0.83 0.015 268);
+  --sidebar-primary: oklch(0.467 0.23 286.8);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.27 0.03 266);
+  --sidebar-accent-foreground: oklch(0.97 0.01 280);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.467 0.23 286.8);
+  /* Cool neutral shadows — soft and diffuse, the way the mockup cards sit. */
+  --shadow-color: 265 40% 12%;
+  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.05);
+  --shadow-md: 0 4px 16px -4px hsl(var(--shadow-color) / 0.1), 0 2px 6px -2px hsl(var(--shadow-color) / 0.06);
+  --shadow-lg: 0 16px 40px -12px hsl(var(--shadow-color) / 0.16), 0 4px 12px -4px hsl(var(--shadow-color) / 0.08);
+}
+
+.dark {
+  --background: oklch(0.175 0.022 266);
+  --foreground: oklch(0.95 0.008 280);
+  --card: oklch(0.215 0.026 266);
+  --card-foreground: oklch(0.95 0.008 280);
+  --popover: oklch(0.215 0.026 266);
+  --popover-foreground: oklch(0.95 0.008 280);
+  --primary: oklch(0.66 0.19 288);
+  --primary-foreground: oklch(0.15 0.02 266);
+  --secondary: oklch(0.26 0.028 266);
+  --secondary-foreground: oklch(0.95 0.008 280);
+  --muted: oklch(0.26 0.028 266);
+  --muted-foreground: oklch(0.7 0.02 268);
+  --accent: oklch(0.3 0.05 285);
+  --accent-foreground: oklch(0.93 0.03 290);
+  --destructive: oklch(0.68 0.19 25);
+  --border: oklch(1 0 0 / 11%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.66 0.19 288);
+  --success: oklch(0.7 0.16 150);
+  --success-muted: oklch(0.3 0.06 150);
+  --warning: oklch(0.72 0.17 45);
+  --warning-muted: oklch(0.32 0.06 45);
+  --info: oklch(0.66 0.18 264);
+  --info-muted: oklch(0.3 0.06 264);
+  --star: oklch(0.8 0.15 70);
+  --chart-1: oklch(0.66 0.19 288);
+  --chart-2: oklch(0.72 0.17 45);
+  --chart-3: oklch(0.7 0.16 150);
+  --chart-4: oklch(0.66 0.18 264);
+  --chart-5: oklch(0.8 0.15 70);
+  --sidebar: oklch(0.145 0.02 266);
+  --sidebar-foreground: oklch(0.85 0.012 275);
+  --sidebar-primary: oklch(0.66 0.19 288);
+  --sidebar-primary-foreground: oklch(0.15 0.02 266);
+  --sidebar-accent: oklch(0.24 0.028 266);
+  --sidebar-accent-foreground: oklch(0.95 0.008 280);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.66 0.19 288);
+  --shadow-color: 266 50% 2%;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+  h1, h2, h3, h4 {
+    @apply font-heading;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  /* Photo overlay used on the hero and every 16:9 trip image, so white
+     titles stay legible over an arbitrary photograph. */
+  .photo-scrim {
+    background-image: linear-gradient(
+      to top,
+      hsl(266 45% 6% / 0.85) 0%,
+      hsl(266 45% 6% / 0.45) 35%,
+      hsl(266 45% 6% / 0) 70%
+    );
+  }
+
+  .shadow-tinted-sm {
+    box-shadow: var(--shadow-sm);
+  }
+  .shadow-tinted-md {
+    box-shadow: var(--shadow-md);
+  }
+  .shadow-tinted-lg {
+    box-shadow: var(--shadow-lg);
+  }
 }

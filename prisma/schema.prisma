@@ -1,0 +1,479 @@
+// MaghrebVoyage — CDC §4 "Base de données"
+//
+// Entity set follows §4.1 exactly:
+//   CONSERVÉE : User, TravelRequest, TravelRequestStatusHistory, AuditLog
+//   MODIFIÉE  : Agency (+verification*), Payment (+bookingId, +groupTripId), AdminNote (+groupTripId)
+//   NOUVELLE  : GroupTrip, Booking
+//   SUPPRIMÉE : Offer, TravelRequestAgencyAssignment  ← absent on purpose, the
+//               pivot replaced agency offers with published trips (§0.3)
+//   OPTIONNELLE: ClientProfile ← not built; §4.1 says client data lives on
+//               Booking in V1, and client accounts are V2 (§9.3)
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+// Prisma 7 moved connection URLs out of the schema — they live in
+// prisma.config.ts, and the runtime client is constructed with a driver
+// adapter (see src/lib/prisma.ts).
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums — the state machines from §4.2
+// ---------------------------------------------------------------------------
+
+enum Role {
+  ADMIN
+  AGENCY
+  CLIENT
+}
+
+enum AgencyVerificationStatus {
+  PENDING
+  UNDER_REVIEW
+  VERIFIED
+  REJECTED
+  SUSPENDED
+}
+
+/// DRAFT → PUBLISHED → FULL (auto) → CLOSED (agence) → CANCELLED (agence)
+enum TripStatus {
+  DRAFT
+  PUBLISHED
+  FULL
+  CLOSED
+  CANCELLED
+}
+
+/// NOTE — deliberate deviation from CDC §D, flagged for sign-off.
+///
+/// §D specifies { DESERT CULTURE AVENTURE FAMILLE LUXE NATURE RELIGIEUX
+/// HISTORIQUE }. That set has no member for three trip kinds already in the
+/// catalogue and the whole front end: beach (Djerba, Taghazout, Essaouira),
+/// trekking (Toubkal) and gastronomy (Fès). Mapping them onto CULTURE or
+/// NATURE would lose real product meaning and silently mislabel seeded data.
+///
+/// This enum therefore keeps the values the application actually uses. Say the
+/// word and it flips to the §D list — it is one migration plus a relabel of the
+/// seed, the AI prompts and the filter chips.
+enum TripType {
+  DESERT
+  TREKKING
+  BEACH
+  CULTURAL
+  ADVENTURE
+  CITY_BREAK
+  GASTRONOMY
+  PILGRIMAGE
+}
+
+enum PhysicalLevel {
+  EASY
+  MEDIUM
+  SPORT
+  EXPERT
+}
+
+/// PENDING_PAYMENT → CONFIRMED → CANCELLED | REFUNDED | NO_SHOW
+enum BookingStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  CANCELLED
+  REFUNDED
+  NO_SHOW
+}
+
+/// PENDING → SUCCEEDED | FAILED | CANCELLED | REFUNDED
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum TravelRequestStatus {
+  SUBMITTED
+  AI_PROCESSED
+  MATCH_SUGGESTED
+  CLIENT_CONFIRMED
+  PAYMENT_PENDING
+  PAID
+  CLOSED
+  CANCELLED
+}
+
+// ---------------------------------------------------------------------------
+// Accounts
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  /// bcrypt hash. Null for accounts that only ever sign in via a provider.
+  passwordHash  String?
+  name          String?
+  role          Role      @default(CLIENT)
+  emailVerified DateTime?
+  image         String?
+
+  /// Set when this user *is* an agency's login (role = AGENCY).
+  agency   Agency? @relation("AgencyOwner")
+
+  /// Admin actions this user performed, for §K's status history.
+  verifiedAgencies Agency[]    @relation("AgencyVerifier")
+  adminNotes       AdminNote[]
+  auditLogs        AuditLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([role])
+}
+
+model Agency {
+  id          String @id @default(uuid())
+  slug        String @unique
+  name        String
+  description String @db.Text
+
+  managerName  String
+  contactEmail String @unique
+  contactPhone String
+  country      String
+  city         String
+
+  /// §J.1 — at least one of each is required at registration.
+  zones     String[]
+  tripTypes TripType[]
+
+  logoUrl          String?
+  registrationNumber String?
+
+  // §J.1 "Champs à ajouter sur la table Agency"
+  verificationStatus AgencyVerificationStatus @default(PENDING)
+  verificationDocUrl String?
+  /// Admin's reason on REJECTED / SUSPENDED. Required by §K before either.
+  verificationNote   String?  @db.Text
+  verifiedAt         DateTime?
+  verifiedByUserId   String?
+  verifiedBy         User?     @relation("AgencyVerifier", fields: [verifiedByUserId], references: [id], onDelete: SetNull)
+
+  /// The login that owns this agency.
+  userId String @unique
+  user   User   @relation("AgencyOwner", fields: [userId], references: [id], onDelete: Cascade)
+
+  trips           GroupTrip[]
+  bookings        Booking[]
+  payments        Payment[]
+  statusHistory   AgencyStatusHistory[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Admin list is filtered by status and sorted by signup date (§K.2), and
+  // §K.1 alerts on "en attente depuis > 48h".
+  @@index([verificationStatus, createdAt])
+}
+
+/// §K.2 "Historique des changements de statut" on the agency detail view.
+model AgencyStatusHistory {
+  id       String                   @id @default(uuid())
+  agencyId String
+  agency   Agency                   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  from     AgencyVerificationStatus?
+  to       AgencyVerificationStatus
+  reason   String?                  @db.Text
+  byUserId String?
+  createdAt DateTime                @default(now())
+
+  @@index([agencyId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// The central entity (§D)
+// ---------------------------------------------------------------------------
+
+model GroupTrip {
+  id       String @id @default(uuid())
+  agencyId String
+  agency   Agency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+
+  title       String
+  /// Generated from the title; collisions get -2, -3… (§E). This is the Lien Magique.
+  slug        String @unique
+  destination String
+  description String @db.Text
+
+  coverImage String?
+  images     String[]
+
+  startDate    DateTime
+  endDate      DateTime
+  /// Derived (endDate - startDate) and stored so the marketplace can sort and
+  /// filter on it without computing per row.
+  durationDays Int
+
+  /// Decimal, not Float: money must not carry binary rounding error.
+  totalPrice     Decimal @db.Decimal(10, 2)
+  depositAmount  Decimal @db.Decimal(10, 2)
+  currency       String  @default("EUR")
+
+  totalSpots  Int
+  /// INVARIANT — written by exactly two code paths and no others:
+  ///   +  the Stripe webhook, via a conditional updateMany (CLAUDE.md §6.3)
+  ///   -  the booking cancellation endpoint
+  /// Anything else touching this field is a bug, not a style question.
+  bookedSpots Int @default(0)
+
+  tripType       TripType
+  inclusions     String[]
+  exclusions     String[]
+  meetingPoint   String?
+  programDays    String?        @db.Text
+  guideLanguages String[]
+  physicalLevel  PhysicalLevel?
+
+  /// Generated at publication, used by §C.2's tag scoring.
+  aiTags String[]
+
+  status   TripStatus @default(DRAFT)
+  isPublic Boolean    @default(true)
+
+  cancelledAt  DateTime?
+  cancelReason String?   @db.Text
+
+  bookings Booking[]
+  payments Payment[]
+  adminNotes AdminNote[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Marketplace hard filter is (status, startDate) with capacity checked after;
+  // the agency dashboard lists by agency then status.
+  @@index([status, startDate])
+  @@index([agencyId, status])
+  @@index([destination])
+}
+
+// ---------------------------------------------------------------------------
+// Bookings & payments (§F, §H)
+// ---------------------------------------------------------------------------
+
+model Booking {
+  id          String    @id @default(uuid())
+  groupTripId String
+  groupTrip   GroupTrip @relation(fields: [groupTripId], references: [id], onDelete: Cascade)
+
+  /// Denormalized from the trip so agency-scoped queries never need a join —
+  /// and so §4's isolation rule can be enforced with a single where clause.
+  agencyId String
+  agency   Agency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+
+  /// Set only when the booking came through the AI form (Chemin A).
+  travelRequestId String?
+  travelRequest   TravelRequest? @relation(fields: [travelRequestId], references: [id], onDelete: SetNull)
+
+  clientName    String
+  clientEmail   String
+  clientPhone   String?
+  clientCountry String?
+
+  numberOfSeats Int     @default(1)
+  /// Written by the webhook once Stripe confirms — never trusted from the browser.
+  depositPaid   Decimal? @db.Decimal(10, 2)
+  totalAmount   Decimal  @db.Decimal(10, 2)
+
+  /// 'MV-' + 6 digits. Generated by the webhook at confirmation, not at
+  /// creation — an unpaid booking must never hold a confirmation code.
+  confirmationCode String? @unique
+
+  /// crypto.randomUUID(). The client's ONLY credential for cancelling; there
+  /// is no login (§G.1). Never derive it from the booking id.
+  cancellationToken String @unique
+
+  status             BookingStatus @default(PENDING_PAYMENT)
+  cancellationReason String?       @db.Text
+  cancelledAt        DateTime?
+  refundedAt         DateTime?
+
+  /// Denormalized payment id (CLAUDE.md §5). The real relation is
+  /// Payment.bookingId — this is a plain string so reading a booking doesn't
+  /// need a join. Not a circular FK.
+  paymentId String?
+  payment   Payment?
+
+  notes String? @db.Text
+
+  /// Not in the source spec. Exists solely so the E14 cron is idempotent —
+  /// without it a redeploy or manual retrigger re-sends the 7-day reminder to
+  /// every client (CLAUDE.md §5).
+  remindedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // The E14 cron scans (status, startDate-of-trip, remindedAt IS NULL); the
+  // agency and admin views list by agency/status.
+  @@index([status, remindedAt])
+  @@index([agencyId, status])
+  @@index([groupTripId, status])
+  @@index([clientEmail])
+}
+
+model Payment {
+  id String @id @default(uuid())
+
+  /// One payment per booking — the unique constraint is what makes the
+  /// idempotency guarantee hold at the database level, not just in code.
+  bookingId String  @unique
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  groupTripId String
+  groupTrip   GroupTrip @relation(fields: [groupTripId], references: [id], onDelete: Cascade)
+  agencyId    String
+  agency      Agency    @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+
+  /// THE idempotency key. Stripe redelivers webhooks — this unique index is
+  /// the backstop if the application-level check ever races with itself.
+  stripeSessionId       String  @unique
+  stripePaymentIntentId String?
+  stripeCustomerEmail   String
+
+  amount   Decimal @db.Decimal(10, 2)
+  currency String  @default("EUR")
+  /// 'deposit' | 'service_fee' (§H). Only 'deposit' is used in V1.
+  paymentType String @default("deposit")
+
+  status PaymentStatus @default(PENDING)
+  paidAt DateTime?
+
+  /// Raw webhook body, for debugging a disputed payment months later.
+  rawProviderResponse Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([agencyId, status])
+  @@index([status, paidAt])
+}
+
+// ---------------------------------------------------------------------------
+// AI request flow (Chemin A) — §B, §C
+// ---------------------------------------------------------------------------
+
+model TravelRequest {
+  id String @id @default(uuid())
+
+  // Step 1
+  destination         String
+  dateFlexible        Boolean
+  exactStartDate      DateTime?
+  exactEndDate        DateTime?
+  desiredDurationDays Int?
+
+  // Step 2
+  travelerCount Int
+  adults        Int
+  children      Int     @default(0)
+  budgetMax     Decimal @db.Decimal(10, 2)
+
+  // Step 3
+  tripTypes         TripType[]
+  style             String?
+  accommodation     String?
+  transportIncluded Boolean   @default(false)
+
+  // Step 4
+  activities String?
+  constraints String? @db.Text
+  language    String?
+
+  // Step 5 — §B marks both consents "Obligatoire / Bloquant"
+  clientName    String
+  clientEmail   String
+  clientPhone   String?
+  clientCountry String?
+  gdprConsent   Boolean
+  termsAccepted Boolean
+
+  // §C.1 structuring output
+  summary               String?  @db.Text
+  aiTags                String[]
+  complexity            Int?
+  destinationNormalized String?
+  budgetLevel           String?
+  dominantTripType      TripType?
+  /// True when §C.3's fallback ran instead of the LLM — lets §K.6 report how
+  /// often the AI path actually degraded.
+  usedFallback          Boolean  @default(false)
+
+  /// Result of §C.2 matching, in rank order.
+  matchedTripIds String[]
+
+  status TravelRequestStatus @default(SUBMITTED)
+
+  bookings      Booking[]
+  statusHistory TravelRequestStatusHistory[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([clientEmail])
+}
+
+model TravelRequestStatusHistory {
+  id              String              @id @default(uuid())
+  travelRequestId String
+  travelRequest   TravelRequest       @relation(fields: [travelRequestId], references: [id], onDelete: Cascade)
+  from            TravelRequestStatus?
+  to              TravelRequestStatus
+  note            String?             @db.Text
+  createdAt       DateTime            @default(now())
+
+  @@index([travelRequestId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Admin (§4.1)
+// ---------------------------------------------------------------------------
+
+model AdminNote {
+  id     String @id @default(uuid())
+  body   String @db.Text
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  /// Nullable per §4.1 "Ajouter : groupTripId nullable".
+  groupTripId String?
+  groupTrip   GroupTrip? @relation(fields: [groupTripId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([groupTripId, createdAt])
+}
+
+model AuditLog {
+  id     String @id @default(uuid())
+  action String
+  /// e.g. "Booking", "GroupTrip" — kept as strings so a log entry survives the
+  /// row it describes being deleted.
+  entity   String
+  entityId String
+
+  actorId String?
+  actor   User?   @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+}

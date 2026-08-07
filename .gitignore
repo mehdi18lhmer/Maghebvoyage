@@ -39,3 +39,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.gstack/
+!.env.example
+
+# Prisma generated client
+/src/generated
+
+# local coding-agent tool config/skill caches — not app source
+/.claude
+/.agents
+/.autohand
+/.junie
