@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "CGU | MaghrebVoyage" };
+export const metadata: Metadata = {
+  title: "Conditions générales d'utilisation",
+  alternates: { canonical: "/legal/cgu" },
+};
 
 export default function CguPage() {
   return (

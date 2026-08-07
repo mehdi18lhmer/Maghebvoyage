@@ -1,9 +1,12 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 import { LayoutDashboard, ListChecks, PlusCircle, Ticket, UserCog } from "lucide-react";
 import { DashboardShell, type DashboardNavItem } from "@/components/layout/dashboard-shell";
 import { AgencyProvider } from "@/components/agency/agency-context";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 const NAV_ITEMS: DashboardNavItem[] = [
   { href: "/agency", label: "Accueil", icon: <LayoutDashboard className="size-4" /> },

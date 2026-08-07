@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 import {
   BarChart3,
   Building2,
@@ -10,6 +11,10 @@ import {
 } from "lucide-react";
 import { DashboardShell, type DashboardNavItem } from "@/components/layout/dashboard-shell";
 import { auth } from "@/auth";
+
+// Auth-gated already, but robots.txt alone isn't binding on every crawler —
+// a per-page noindex is the authoritative signal search engines respect.
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 const NAV_ITEMS: DashboardNavItem[] = [
   { href: "/admin", label: "Accueil", icon: <LayoutDashboard className="size-4" /> },

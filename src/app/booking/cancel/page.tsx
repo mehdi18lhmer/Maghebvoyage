@@ -7,7 +7,7 @@ import { CancelBookingFlow } from "@/components/bookings/cancel-booking-flow";
 import { getBookingByToken, getTripBySlug, trips } from "@/lib/mock-data";
 
 export const metadata: Metadata = {
-  title: "Annuler ma réservation | MaghrebVoyage",
+  title: "Annuler ma réservation",
   robots: { index: false },
 };
 

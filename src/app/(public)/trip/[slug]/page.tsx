@@ -53,12 +53,51 @@ export async function generateMetadata({ params }: PageProps<"/trip/[slug]">): P
     trip.totalPrice
   )}${agency ? ` — organisé par ${agency.name}` : ""}`;
   return {
-    title: `${trip.title} | MaghrebVoyage`,
+    title: trip.title,
     description,
+    alternates: { canonical: `/trip/${trip.slug}` },
     openGraph: {
+      type: "website",
+      title: `${trip.title} | MaghrebVoyage`,
+      description,
+      url: `/trip/${trip.slug}`,
+      images: trip.images[0] ? [trip.images[0]] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
       title: trip.title,
       description,
       images: trip.images[0] ? [trip.images[0]] : undefined,
+    },
+  };
+}
+
+/**
+ * schema.org Product + Offer — the shape Google's rich-result docs recommend
+ * for a bookable, priced item (there's no first-class "group trip" type).
+ * `availability` maps straight off the same seat-count the UI already shows,
+ * so the two can never silently disagree.
+ */
+function tripJsonLd(
+  trip: NonNullable<ReturnType<typeof getTripBySlug>>,
+  agencyName: string | undefined,
+  soldOut: boolean
+) {
+  const url = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  return {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: trip.title,
+    description: trip.description,
+    image: trip.images,
+    url: `${url}/trip/${trip.slug}`,
+    brand: agencyName ? { "@type": "Organization", name: agencyName } : undefined,
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "EUR",
+      price: trip.totalPrice,
+      availability: soldOut ? "https://schema.org/SoldOut" : "https://schema.org/InStock",
+      url: `${url}/trip/${trip.slug}`,
     },
   };
 }
@@ -84,6 +123,12 @@ export default async function TripDetailPage({ params }: PageProps<"/trip/[slug]
 
   return (
     <div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(tripJsonLd(trip, agency?.name, soldOut)),
+        }}
+      />
       {/* Hero — the photograph carries the title, as in the reference sheet.
           Pulled under the transparent header the same way the landing is. */}
       <section className="relative -mt-16">

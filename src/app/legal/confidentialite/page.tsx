@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "Confidentialité | MaghrebVoyage" };
+export const metadata: Metadata = {
+  title: "Politique de confidentialité",
+  alternates: { canonical: "/legal/confidentialite" },
+};
 
 export default function ConfidentialitePage() {
   return (

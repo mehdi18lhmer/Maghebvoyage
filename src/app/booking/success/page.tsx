@@ -8,7 +8,7 @@ import { getAgencyById, getTripBySlug } from "@/lib/mock-data";
 import { formatDateRange, formatPrice } from "@/lib/format";
 
 export const metadata: Metadata = {
-  title: "Réservation confirmée | MaghrebVoyage",
+  title: "Réservation confirmée",
   robots: { index: false },
 };
 

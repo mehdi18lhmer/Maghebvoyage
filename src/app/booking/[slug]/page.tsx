@@ -8,7 +8,7 @@ export async function generateMetadata({ params }: PageProps<"/booking/[slug]">)
   const { slug } = await params;
   const trip = getTripBySlug(slug);
   return {
-    title: trip ? `Réserver — ${trip.title} | MaghrebVoyage` : "Réserver | MaghrebVoyage",
+    title: trip ? `Réserver — ${trip.title}` : "Réserver",
     robots: { index: false },
   };
 }

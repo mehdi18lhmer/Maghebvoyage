@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "Remboursements | MaghrebVoyage" };
+export const metadata: Metadata = {
+  title: "Politique de remboursement",
+  alternates: { canonical: "/legal/remboursements" },
+};
 
 export default function RemboursementsPage() {
   return (

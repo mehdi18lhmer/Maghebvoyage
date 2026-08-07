@@ -2,8 +2,14 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { MarketplaceBrowser } from "@/components/trips/marketplace-browser";
 
+const DESCRIPTION =
+  "Parcourez tous les voyages en groupe publiés par des agences vérifiées au Maroc, en Tunisie et en Algérie. Filtrez par destination, budget et dates.";
+
 export const metadata: Metadata = {
-  title: "Tous les voyages | MaghrebVoyage",
+  title: "Tous les voyages",
+  description: DESCRIPTION,
+  alternates: { canonical: "/voyages" },
+  openGraph: { title: "Tous les voyages | MaghrebVoyage", description: DESCRIPTION, url: "/voyages" },
 };
 
 export default function MarketplacePage() {

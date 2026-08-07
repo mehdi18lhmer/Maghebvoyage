@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "Mentions légales | MaghrebVoyage" };
+export const metadata: Metadata = {
+  title: "Mentions légales",
+  alternates: { canonical: "/legal/mentions" },
+};
 
 export default function MentionsPage() {
   return (

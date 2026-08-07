@@ -15,7 +15,18 @@ export async function generateMetadata({ params }: PageProps<"/agence/[slug]">):
   const { slug } = await params;
   const agency = getAgencyBySlug(slug);
   if (!agency) return {};
-  return { title: `${agency.name} | MaghrebVoyage` };
+  const description = agency.description || `Voyages en groupe organisés par ${agency.name}, agence vérifiée sur MaghrebVoyage.`;
+  return {
+    title: agency.name,
+    description,
+    alternates: { canonical: `/agence/${agency.slug}` },
+    openGraph: {
+      title: `${agency.name} | MaghrebVoyage`,
+      description,
+      url: `/agence/${agency.slug}`,
+      images: agency.logoUrl ? [agency.logoUrl] : undefined,
+    },
+  };
 }
 
 export default async function AgencyPublicPage({ params }: PageProps<"/agence/[slug]">) {
