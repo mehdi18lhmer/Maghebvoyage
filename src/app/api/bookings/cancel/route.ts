@@ -1,22 +1,28 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { cancelBookingByToken } from "@/services/bookings.service";
+import { auth } from "@/auth";
+import { cancelBookingByUser } from "@/services/bookings.service";
 import { ServiceError } from "@/services/errors";
 
 /**
- * §G.1 — client cancellation via the token from their confirmation email.
- * No auth: the token IS the credential (§10 — random UUID, checked against
- * status so a replayed link on an already-cancelled booking just 409s).
+ * §G.1 — client cancellation from their account dashboard. Cancellation is
+ * account-based now (see CLAUDE.md's client-accounts pivot): the session's
+ * userId is the credential, checked against `booking.userId` in the service.
  */
 export async function POST(request: Request) {
-  const BodySchema = z.object({ token: z.string().min(1) });
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== "CLIENT") {
+    return NextResponse.json({ error: "Connexion requise." }, { status: 401 });
+  }
+
+  const BodySchema = z.object({ bookingId: z.string().min(1), reason: z.string().optional() });
   const parsed = BodySchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "Lien d'annulation invalide." }, { status: 400 });
+    return NextResponse.json({ error: "Requête invalide." }, { status: 400 });
   }
 
   try {
-    const booking = await cancelBookingByToken(parsed.data.token);
+    const booking = await cancelBookingByUser(parsed.data.bookingId, session.user.id, parsed.data.reason);
 
     // E8 (client) + E9 (agency) + E10 (admin) — after the cancellation has
     // actually committed, never before.

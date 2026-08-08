@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { CheckCircle2, Loader2, Mic, MicOff, Send, Sparkles, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import type { RobotMood } from "@/components/ui/robot-assistant";
 import type { AiFormStateApi } from "@/components/ai/use-ai-form-state";
@@ -27,7 +28,9 @@ import type { GroupTrip } from "@/lib/types";
  * live in the récapitulatif panel instead.
  *
  * Grounding and extraction are both server-side (/api/ai/converse) — the
- * browser never holds an LLM key.
+ * browser never holds an LLM key. `locale` is threaded into every AI request
+ * so the model's own replies come back in the active language, not just the
+ * UI chrome around them.
  */
 
 // three.js is ~250KB+ gzipped. Lazy + client-only keeps it off the critical path.
@@ -62,35 +65,6 @@ interface Message {
   bookingTrip?: { trip: GroupTrip; agencyName?: string };
 }
 
-const SUGGESTIONS = [
-  "Un trek de 5 jours dans le désert, budget 700€",
-  "Combien coûte l'acompte ?",
-  "Il reste des places en Tunisie ?",
-];
-
-const FIELD_LABELS: Record<string, string> = {
-  destination: "destination",
-  dateFlexible: "dates",
-  exactStartDate: "date de départ",
-  exactEndDate: "date de retour",
-  desiredDurationDays: "durée",
-  travelerCount: "voyageurs",
-  adults: "adultes",
-  children: "enfants",
-  budgetMax: "budget",
-  tripTypes: "type de voyage",
-  style: "style",
-  accommodation: "hébergement",
-  transportIncluded: "transport",
-  activities: "activités",
-  constraints: "contraintes",
-  language: "langue",
-  name: "nom",
-  email: "email",
-  phone: "téléphone",
-  country: "pays",
-};
-
 type VoiceState = "off" | "connecting" | "live" | "unavailable";
 
 /** Pulls a human-readable string out of whatever shape Vapi hands to `error`. */
@@ -114,8 +88,18 @@ function describeVapiError(err: unknown): string {
   return "cause inconnue";
 }
 
+/** Vapi's own transcriber/voice language codes, per active site locale. */
+const VOICE_LOCALE: Record<string, { transcriberLanguage: string; voiceId: string }> = {
+  fr: { transcriberLanguage: "fr", voiceId: "Paige" },
+  en: { transcriberLanguage: "en", voiceId: "Paige" },
+  ar: { transcriberLanguage: "multi", voiceId: "Paige" },
+};
+
 export function AssistantPanel({ formState }: { formState: AiFormStateApi }) {
   const { form, missingRequired, applySlots, goToStep, update } = formState;
+  const locale = useLocale();
+  const t = useTranslations("Assistant");
+  const tFields = useTranslations("Assistant.fields");
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
@@ -153,6 +137,11 @@ export function AssistantPanel({ formState }: { formState: AiFormStateApi }) {
     messagesRef.current = messages;
   }, [messages]);
 
+  const localeRef = useRef(locale);
+  useEffect(() => {
+    localeRef.current = locale;
+  }, [locale]);
+
   // Real Vapi speech-start/speech-end events, not a timer — see the
   // "speaking" branch below. While voice is live but the assistant isn't
   // actively talking, the robot reads as idle/listening instead of a
@@ -186,6 +175,7 @@ export function AssistantPanel({ formState }: { formState: AiFormStateApi }) {
           message,
           history: history.slice(-12).map((m) => ({ role: m.role, content: m.content })),
           form: formRef.current,
+          locale: localeRef.current,
         }),
       });
       if (!res.ok) return null;
@@ -221,7 +211,7 @@ export function AssistantPanel({ formState }: { formState: AiFormStateApi }) {
       const res = await fetch("/api/ai/match", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ form: formRef.current }),
+        body: JSON.stringify({ form: formRef.current, locale: localeRef.current }),
       });
       if (!res.ok) return null;
       return (await res.json()) as Suggestions & { trips: GroupTrip[] };
@@ -244,17 +234,21 @@ export function AssistantPanel({ formState }: { formState: AiFormStateApi }) {
             ...prev,
             {
               role: "assistant",
-              content: result.fallback
-                ? "Voici les prochains départs disponibles, les plus proches de vos critères :"
-                : "Voici les voyages qui correspondent le mieux à votre demande :",
+              content: result.fallback ? t("suggestionsFallback") : t("suggestionsMatched"),
               suggestions: result,
             },
           ]);
         });
       }
-      return filled.map((k) => FIELD_LABELS[k] ?? k);
+      return filled.map((k) => {
+        try {
+          return tFields(k);
+        } catch {
+          return k;
+        }
+      });
     },
-    [applySlots, goToStep, isNowComplete, fetchSuggestions]
+    [applySlots, goToStep, isNowComplete, fetchSuggestions, t, tFields]
   );
 
   /**
@@ -268,13 +262,13 @@ export function AssistantPanel({ formState }: { formState: AiFormStateApi }) {
       setPhase("booking");
       setMessages((prev) => [
         ...prev,
-        { role: "user", content: `J'ai choisi : ${trip.title}` },
+        { role: "user", content: t("chosenTrip", { title: trip.title }) },
         {
           role: "assistant",
           content:
             formRef.current.name.trim() && formRef.current.email.trim()
-              ? `Parfait ! Vérifiez vos informations ci-dessous, puis confirmez pour passer au paiement de l'acompte.`
-              : `Parfait ! Il me faut votre nom et votre email pour finaliser la réservation — vous pouvez me les dire, ou les compléter directement ci-dessous.`,
+              ? t("readyToConfirm")
+              : t("askContactInfo"),
           bookingTrip: { trip, agencyName },
         },
       ]);
@@ -282,17 +276,23 @@ export function AssistantPanel({ formState }: { formState: AiFormStateApi }) {
       // Mid-call pivot for a live voice session: same call, new instructions —
       // no need to hang up and redial (Vapi's add-message control channel).
       if (voice === "live" && vapiRef.current) {
+        const languageNote =
+          localeRef.current === "en"
+            ? "Continue speaking English."
+            : localeRef.current === "ar"
+              ? "استمر بالتحدث بالعربية."
+              : "Continue de parler en français.";
         vapiRef.current.send({
           type: "add-message",
           message: {
             role: "system",
-            content: `Le voyageur vient de choisir le voyage "${trip.title}" (${trip.destination}). Demande-lui maintenant son nom, son email et son téléphone si tu ne les as pas déjà, confirme le nombre de places, puis demande une confirmation avant paiement. IMPORTANT : ne demande JAMAIS le consentement RGPD ni les CGU à voix haute — ce sont des cases à cocher que la personne doit cliquer elle-même dans l'application.`,
+            content: `Le voyageur vient de choisir le voyage "${trip.title}" (${trip.destination}). Demande-lui maintenant son nom, son email et son téléphone si tu ne les as pas déjà, confirme le nombre de places, puis demande une confirmation avant paiement. IMPORTANT : ne demande JAMAIS le consentement RGPD ni les CGU à voix haute — ce sont des cases à cocher que la personne doit cliquer elle-même dans l'application. ${languageNote}`,
           },
           triggerResponseEnabled: true,
         });
       }
     },
-    [voice]
+    [voice, t]
   );
 
   const send = useCallback(
@@ -307,14 +307,7 @@ export function AssistantPanel({ formState }: { formState: AiFormStateApi }) {
       const result = await converse(clean, messages);
 
       if (!result) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content:
-              "Une erreur est survenue. Vous pouvez continuer via le récapitulatif à droite.",
-          },
-        ]);
+        setMessages((prev) => [...prev, { role: "assistant", content: t("genericError") }]);
         setPending(false);
         return;
       }
@@ -327,7 +320,7 @@ export function AssistantPanel({ formState }: { formState: AiFormStateApi }) {
       ]);
       setPending(false);
     },
-    [messages, pending, converse, applyResult]
+    [messages, pending, converse, applyResult, t]
   );
 
   async function toggleVoice() {
@@ -346,7 +339,7 @@ export function AssistantPanel({ formState }: { formState: AiFormStateApi }) {
     const publicKey = process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY;
     if (!publicKey) {
       setVoice("unavailable");
-      setVoiceError("Clé Vapi absente — la saisie au clavier reste disponible.");
+      setVoiceError(t("voiceKeyMissing"));
       return;
     }
 
@@ -356,7 +349,7 @@ export function AssistantPanel({ formState }: { formState: AiFormStateApi }) {
     try {
       const [{ default: Vapi }, ctxRes] = await Promise.all([
         import("@vapi-ai/web"),
-        fetch("/api/ai/voice-context"),
+        fetch(`/api/ai/voice-context?locale=${locale}`),
       ]);
       const { prompt } = (await ctxRes.json()) as { prompt: string };
 
@@ -418,13 +411,13 @@ export function AssistantPanel({ formState }: { formState: AiFormStateApi }) {
       vapi.on("call-start-failed", (e: unknown) => {
         console.error("[vapi] call-start-failed", e);
         setVoice("unavailable");
-        setVoiceError(`Le démarrage a échoué : ${describeVapiError(e)}`);
+        setVoiceError(t("voiceStartFailed", { cause: describeVapiError(e) }));
       });
 
       vapi.on("error", (err: unknown) => {
         console.error("[vapi] error", err);
         setVoice("unavailable");
-        setVoiceError(`Erreur Vapi : ${describeVapiError(err)}`);
+        setVoiceError(t("voiceError", { cause: describeVapiError(err) }));
       });
 
       vapi.on("message", (msg: Record<string, unknown>) => {
@@ -468,19 +461,24 @@ export function AssistantPanel({ formState }: { formState: AiFormStateApi }) {
         }
       });
 
+      const voiceConfig = VOICE_LOCALE[locale] ?? VOICE_LOCALE.fr;
       await vapi.start({
         firstMessage:
-          "Bonjour ! Parlez-moi de votre projet de voyage : destination, dates, budget, et je m'occupe du reste.",
+          locale === "en"
+            ? "Hi! Tell me about your trip: destination, dates, budget, and I'll take care of the rest."
+            : locale === "ar"
+              ? "مرحباً! أخبرني عن رحلتك: الوجهة، التواريخ، الميزانية، وسأتكفل بالباقي."
+              : "Bonjour ! Parlez-moi de votre projet de voyage : destination, dates, budget, et je m'occupe du reste.",
         model: {
           provider: "openai",
           model: "gpt-4o-mini",
           messages: [{ role: "system", content: prompt }],
         },
-        voice: { provider: "vapi", voiceId: "Paige" },
+        voice: { provider: "vapi", voiceId: voiceConfig.voiceId },
         transcriber: {
           provider: "deepgram",
           model: "nova-2",
-          language: "fr",
+          language: voiceConfig.transcriberLanguage,
           // Numbers, dates and budgets get spoken a lot here; smart formatting
           // turns "sept cents euros" into something the extractor can parse.
           smartFormat: true,
@@ -506,20 +504,21 @@ export function AssistantPanel({ formState }: { formState: AiFormStateApi }) {
     } catch (err) {
       console.error("[vapi:start]", err);
       setVoice("unavailable");
-      setVoiceError(`La voix n'a pas pu démarrer : ${describeVapiError(err)}`);
+      setVoiceError(t("voiceStartError", { cause: describeVapiError(err) }));
     }
   }
 
   const showEmptyState = messages.length === 0 && !liveTranscript;
+  const quickSuggestions = t.raw("quickSuggestions") as string[];
 
   return (
     <Card>
       <div className="flex items-center gap-2">
         <Sparkles className="size-4 text-primary" />
-        <p className="font-heading text-base font-bold">Votre assistant</p>
+        <p className="font-heading text-base font-bold">{t("title")}</p>
         {phase === "booking" && voice !== "live" && (
           <span className="ml-auto rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
-            Réservation en cours
+            {t("bookingInProgress")}
           </span>
         )}
         {voice === "live" && (
@@ -537,7 +536,7 @@ export function AssistantPanel({ formState }: { formState: AiFormStateApi }) {
                 />
               ))}
             </span>
-            À l&apos;écoute
+            {t("listening")}
           </span>
         )}
       </div>
@@ -545,19 +544,15 @@ export function AssistantPanel({ formState }: { formState: AiFormStateApi }) {
       {micSilent && voice === "live" && (
         <div className="mt-3 flex items-start gap-2 rounded-lg border border-warning/40 bg-warning-muted px-3 py-2 text-xs text-warning">
           <TriangleAlert className="mt-0.5 size-3.5 shrink-0" />
-          <span>
-            Je ne capte aucun son de votre micro. Vérifiez l&apos;autorisation du navigateur, le
-            micro sélectionné et le volume d&apos;entrée — sinon l&apos;assistant parle mais
-            n&apos;entend rien.
-          </span>
+          <span>{t("micSilentWarning")}</span>
         </div>
       )}
 
       <div className="relative mt-2 h-72">
         <RobotAssistant mood={mood} className="h-full w-full" />
         {showEmptyState && (
-          <p className="absolute right-0 bottom-0 max-w-[58%] rounded-2xl rounded-br-sm border bg-secondary/70 px-3.5 py-2.5 text-sm leading-snug text-muted-foreground backdrop-blur">
-            Dites-moi où vous voulez partir — je remplis tout pour vous ✨
+          <p className="absolute right-0 bottom-0 max-w-[58%] rounded-2xl rounded-br-sm border bg-secondary/70 px-3.5 py-2.5 text-sm leading-snug text-muted-foreground backdrop-blur rtl:right-auto rtl:left-0 rtl:rounded-br-2xl rtl:rounded-bl-sm">
+            {t("emptyStatePrompt")}
           </p>
         )}
       </div>
@@ -565,7 +560,7 @@ export function AssistantPanel({ formState }: { formState: AiFormStateApi }) {
       {missingRequired.length === 0 && (
         <div className="mt-3 flex items-center gap-2 rounded-xl border border-success/30 bg-success-muted px-3 py-2 text-sm font-medium text-success">
           <CheckCircle2 className="size-4 shrink-0" />
-          Tout est prêt — cochez les 2 cases dans le récapitulatif pour voir vos voyages.
+          {t("allReady")}
         </div>
       )}
 
@@ -581,14 +576,14 @@ export function AssistantPanel({ formState }: { formState: AiFormStateApi }) {
                 className={cn(
                   "rounded-xl px-3.5 py-2.5 text-sm leading-relaxed",
                   m.role === "user"
-                    ? "ml-8 bg-primary text-primary-foreground"
-                    : "mr-3 bg-secondary text-foreground"
+                    ? "ml-8 bg-primary text-primary-foreground rtl:mr-8 rtl:ml-0"
+                    : "mr-3 bg-secondary text-foreground rtl:ml-3 rtl:mr-0"
                 )}
               >
                 {m.via === "voice" && (
                   <span className="mb-1 flex items-center gap-1 text-[10px] font-semibold tracking-wide uppercase opacity-70">
                     <Mic className="size-2.5" />
-                    vocal
+                    {t("voiceTag")}
                   </span>
                 )}
                 <p className="whitespace-pre-wrap">{m.content}</p>
@@ -609,7 +604,7 @@ export function AssistantPanel({ formState }: { formState: AiFormStateApi }) {
 
                 {m.filledFields && m.filledFields.length > 0 && (
                   <p className="mt-1.5 text-[11px] opacity-70">
-                    ✓ Enregistré : {m.filledFields.join(", ")}
+                    ✓ {t("savedFields", { fields: m.filledFields.join(", ") })}
                   </p>
                 )}
 
@@ -643,23 +638,23 @@ export function AssistantPanel({ formState }: { formState: AiFormStateApi }) {
             ) : (
               m.filledFields &&
               m.filledFields.length > 0 && (
-                <p key={i} className="mr-3 text-[11px] text-muted-foreground">
-                  ✓ Enregistré : {m.filledFields.join(", ")}
+                <p key={i} className="mr-3 text-[11px] text-muted-foreground rtl:ml-3 rtl:mr-0">
+                  ✓ {t("savedFields", { fields: m.filledFields.join(", ") })}
                 </p>
               )
             )
           )}
 
           {liveTranscript && (
-            <div className="ml-8 rounded-xl bg-primary/60 px-3.5 py-2.5 text-sm text-primary-foreground italic">
+            <div className="ml-8 rounded-xl bg-primary/60 px-3.5 py-2.5 text-sm text-primary-foreground italic rtl:mr-8 rtl:ml-0">
               {liveTranscript}…
             </div>
           )}
 
           {pending && (
-            <div className="mr-3 flex items-center gap-2 rounded-xl bg-secondary px-3.5 py-2.5 text-sm text-muted-foreground">
+            <div className="mr-3 flex items-center gap-2 rounded-xl bg-secondary px-3.5 py-2.5 text-sm text-muted-foreground rtl:ml-3 rtl:mr-0">
               <Loader2 className="size-3.5 animate-spin" />
-              Je note tout ça…
+              {t("thinking")}
             </div>
           )}
         </div>
@@ -667,7 +662,7 @@ export function AssistantPanel({ formState }: { formState: AiFormStateApi }) {
 
       {showEmptyState && (
         <div className="mt-4 flex flex-wrap gap-1.5">
-          {SUGGESTIONS.map((s) => (
+          {quickSuggestions.map((s) => (
             <button
               key={s}
               type="button"
@@ -690,11 +685,11 @@ export function AssistantPanel({ formState }: { formState: AiFormStateApi }) {
         <Input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="Décrivez votre voyage ou posez une question…"
-          aria-label="Écrire à l'assistant"
+          placeholder={t("inputPlaceholder")}
+          aria-label={t("inputLabel")}
           disabled={pending}
         />
-        <Button type="submit" size="icon" disabled={pending || !draft.trim()} aria-label="Envoyer">
+        <Button type="submit" size="icon" disabled={pending || !draft.trim()} aria-label={t("send")}>
           <Send className="size-4" />
         </Button>
         <Button
@@ -703,8 +698,8 @@ export function AssistantPanel({ formState }: { formState: AiFormStateApi }) {
           variant={voice === "live" ? "destructive" : "outline"}
           onClick={toggleVoice}
           disabled={voice === "connecting"}
-          aria-label={voice === "live" ? "Arrêter le micro" : "Parler à l'assistant"}
-          title={voice === "live" ? "Arrêter le micro" : "Parler à l'assistant"}
+          aria-label={voice === "live" ? t("stopMic") : t("talkToAssistant")}
+          title={voice === "live" ? t("stopMic") : t("talkToAssistant")}
         >
           {voice === "connecting" ? (
             <Loader2 className="size-4 animate-spin" />
@@ -723,10 +718,7 @@ export function AssistantPanel({ formState }: { formState: AiFormStateApi }) {
         </div>
       )}
 
-      <p className="mt-3 text-[11px] leading-snug text-muted-foreground">
-        L&apos;assistant répond uniquement à partir des voyages réellement publiés, et ne coche
-        jamais les cases RGPD et CGU à votre place.
-      </p>
+      <p className="mt-3 text-[11px] leading-snug text-muted-foreground">{t("footerNote")}</p>
     </Card>
   );
 }

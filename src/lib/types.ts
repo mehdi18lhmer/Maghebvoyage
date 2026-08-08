@@ -93,7 +93,7 @@ export interface Booking {
   clientPhone: string;
   numberOfSeats: number;
   status: BookingStatus;
-  cancellationToken: string;
+  userId?: string;
   confirmationCode?: string;
   paymentId?: string;
   createdAt: string;

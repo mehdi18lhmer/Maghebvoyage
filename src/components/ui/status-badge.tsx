@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import type {
   AgencyVerificationStatus,
@@ -17,28 +18,29 @@ const TONE_CLASSES: Record<Tone, string> = {
   danger: "bg-destructive/10 text-destructive",
 };
 
-const TRIP_STATUS: Record<GroupTripStatus, { label: string; tone: Tone }> = {
-  DRAFT: { label: "Brouillon", tone: "neutral" },
-  PUBLISHED: { label: "Publié", tone: "success" },
-  FULL: { label: "Complet", tone: "warning" },
-  CLOSED: { label: "Clôturé", tone: "neutral" },
-  CANCELLED: { label: "Annulé", tone: "danger" },
+const TRIP_TONE: Record<GroupTripStatus, Tone> = {
+  DRAFT: "neutral",
+  PUBLISHED: "success",
+  FULL: "warning",
+  CLOSED: "neutral",
+  CANCELLED: "danger",
 };
 
+const AGENCY_TONE: Record<AgencyVerificationStatus, Tone> = {
+  PENDING: "neutral",
+  UNDER_REVIEW: "info",
+  VERIFIED: "success",
+  REJECTED: "danger",
+  SUSPENDED: "warning",
+};
+
+/** Dashboard-only kinds (agency/admin, out of i18n scope) — stay French. */
 const BOOKING_STATUS: Record<BookingStatus, { label: string; tone: Tone }> = {
   PENDING_PAYMENT: { label: "Paiement en attente", tone: "warning" },
   CONFIRMED: { label: "Confirmée", tone: "success" },
   CANCELLED: { label: "Annulée", tone: "danger" },
   REFUNDED: { label: "Remboursée", tone: "info" },
   NO_SHOW: { label: "Absent", tone: "neutral" },
-};
-
-const AGENCY_STATUS: Record<AgencyVerificationStatus, { label: string; tone: Tone }> = {
-  PENDING: { label: "En attente", tone: "neutral" },
-  UNDER_REVIEW: { label: "En cours d'examen", tone: "info" },
-  VERIFIED: { label: "Vérifiée", tone: "success" },
-  REJECTED: { label: "Rejetée", tone: "danger" },
-  SUSPENDED: { label: "Suspendue", tone: "warning" },
 };
 
 const PAYMENT_STATUS: Record<PaymentStatus, { label: string; tone: Tone }> = {
@@ -67,23 +69,37 @@ type StatusBadgeProps =
   | { kind: "payment"; status: PaymentStatus; className?: string }
   | { kind: "travelRequest"; status: TravelRequestStatus; className?: string };
 
-function resolve(props: StatusBadgeProps): { label: string; tone: Tone } {
+/**
+ * "trip" and "agency" render on public, in-scope pages (trip detail's own
+ * lifecycle badge, the agency card) and are translated via the StatusBadge
+ * namespace; the other three kinds only ever render inside the out-of-scope
+ * agency/admin dashboards and keep their original hardcoded French labels.
+ */
+export function StatusBadge(props: StatusBadgeProps) {
+  const t = useTranslations("StatusBadge");
+
+  let label: string;
+  let tone: Tone;
   switch (props.kind) {
     case "trip":
-      return TRIP_STATUS[props.status];
-    case "booking":
-      return BOOKING_STATUS[props.status];
+      label = t(`trip.${props.status}`);
+      tone = TRIP_TONE[props.status];
+      break;
     case "agency":
-      return AGENCY_STATUS[props.status];
+      label = t(`agency.${props.status}`);
+      tone = AGENCY_TONE[props.status];
+      break;
+    case "booking":
+      ({ label, tone } = BOOKING_STATUS[props.status]);
+      break;
     case "payment":
-      return PAYMENT_STATUS[props.status];
+      ({ label, tone } = PAYMENT_STATUS[props.status]);
+      break;
     case "travelRequest":
-      return TRAVEL_REQUEST_STATUS[props.status];
+      ({ label, tone } = TRAVEL_REQUEST_STATUS[props.status]);
+      break;
   }
-}
 
-export function StatusBadge(props: StatusBadgeProps) {
-  const { label, tone } = resolve(props);
   return (
     <span
       className={cn(

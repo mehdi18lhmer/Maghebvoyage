@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { buildFullCatalogueContext } from "@/lib/trip-context";
-import { VOICE_AGENT_RULES } from "@/services/ai.service";
+import { voiceAgentPrompt } from "@/services/ai.service";
+import { routing } from "@/i18n/routing";
 
 /**
  * System prompt for the Vapi voice agent.
@@ -15,8 +16,15 @@ import { VOICE_AGENT_RULES } from "@/services/ai.service";
  */
 export const runtime = "nodejs";
 
-export async function GET() {
-  const prompt = `${VOICE_AGENT_RULES}\n\n${await buildFullCatalogueContext()}`;
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const requested = searchParams.get("locale");
+  const locale =
+    requested && routing.locales.includes(requested as (typeof routing.locales)[number])
+      ? requested
+      : routing.defaultLocale;
+
+  const prompt = `${voiceAgentPrompt(locale)}\n\n${await buildFullCatalogueContext()}`;
   return NextResponse.json(
     { prompt },
     { headers: { "Cache-Control": "public, max-age=60" } }

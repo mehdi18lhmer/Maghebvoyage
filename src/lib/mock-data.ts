@@ -367,7 +367,6 @@ export const bookings: Booking[] = [
     clientPhone: "+33 6 12 34 56 78",
     numberOfSeats: 2,
     status: "CONFIRMED",
-    cancellationToken: "3f6b2e1a-7c9d-4e2f-9a1b-5d8c2f4e6a7b",
     confirmationCode: "MV-482913",
     paymentId: "pay_1",
     createdAt: "2026-08-01T10:15:00.000Z",
@@ -380,7 +379,6 @@ export const bookings: Booking[] = [
     clientPhone: "+1 514 555 0134",
     numberOfSeats: 4,
     status: "CONFIRMED",
-    cancellationToken: "8a2c4e6f-1b3d-4a5e-8c7f-2e4a6c8b0d1f",
     confirmationCode: "MV-119284",
     paymentId: "pay_2",
     createdAt: "2026-07-15T14:20:00.000Z",
@@ -393,7 +391,6 @@ export const bookings: Booking[] = [
     clientPhone: "+49 176 1234567",
     numberOfSeats: 2,
     status: "CANCELLED",
-    cancellationToken: "1d3f5a7c-9e0b-4d2f-a6c8-3e5a7c9e1f0b",
     confirmationCode: "MV-773410",
     paymentId: "pay_3",
     createdAt: "2026-06-30T08:00:00.000Z",
@@ -407,7 +404,6 @@ export const bookings: Booking[] = [
     clientPhone: "+33 7 89 01 23 45",
     numberOfSeats: 1,
     status: "PENDING_PAYMENT",
-    cancellationToken: "6c8e0f2a-4d6b-4c8e-b0f2-a4d6b8c0e2f4",
     createdAt: "2026-08-03T16:45:00.000Z",
   },
   {
@@ -418,7 +414,6 @@ export const bookings: Booking[] = [
     clientPhone: "+216 22 334 455",
     numberOfSeats: 3,
     status: "CONFIRMED",
-    cancellationToken: "0e2a4c6e-8f0b-4d2e-a4c6-e8f0b2d4a6c8",
     confirmationCode: "MV-556021",
     paymentId: "pay_5",
     createdAt: "2026-08-02T09:30:00.000Z",
@@ -501,9 +496,6 @@ export function getBookingsForTrip(tripId: string) {
   return bookings.filter((b) => b.groupTripId === tripId);
 }
 
-export function getBookingByToken(token: string) {
-  return bookings.find((b) => b.cancellationToken === token);
-}
 
 export function getAgencyName(agencyId: string) {
   return getAgencyById(agencyId)?.name ?? "Agence";

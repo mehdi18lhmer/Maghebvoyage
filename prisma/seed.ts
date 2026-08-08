@@ -391,16 +391,26 @@ async function main() {
     );
   }
 
+  // A CLIENT account, so the seeded booking below has someone to belong to
+  // and the account dashboard/login flow has something to sign in with.
+  const client = await prisma.user.upsert({
+    where: { email: "ahmed@example.com" },
+    update: { role: "CLIENT", passwordHash },
+    create: { email: "ahmed@example.com", name: "Ahmed El Amrani", role: "CLIENT", passwordHash },
+  });
+  console.log(`  client: ${client.email}`);
+
   // One confirmed booking on the Toubkal trek, so the agency dashboard, the
-  // cancellation flow and the admin views all have real data on first run.
+  // client account dashboard and the admin views all have real data on first run.
   const toubkal = await prisma.groupTrip.findUnique({ where: { slug: "trek-atlas-toubkal-4j" } });
   if (toubkal) {
     await prisma.booking.upsert({
-      where: { cancellationToken: "3f6b2e1a-7c9d-4e2f-9a1b-5d8c2f4e6a7b" },
+      where: { confirmationCode: "MV-100001" },
       update: {},
       create: {
         groupTripId: toubkal.id,
         agencyId: toubkal.agencyId,
+        userId: client.id,
         clientName: "Ahmed El Amrani",
         clientEmail: "ahmed@example.com",
         clientPhone: "+33 6 12 34 56 78",
@@ -409,11 +419,10 @@ async function main() {
         totalAmount: (Number(toubkal.totalPrice) * 2).toFixed(2),
         depositPaid: (Number(toubkal.depositAmount) * 2).toFixed(2),
         confirmationCode: "MV-100001",
-        cancellationToken: "3f6b2e1a-7c9d-4e2f-9a1b-5d8c2f4e6a7b",
         status: "CONFIRMED",
       },
     });
-    console.log("  booking: MV-100001 (confirmed, cancellable via seeded token)");
+    console.log("  booking: MV-100001 (confirmed, owned by ahmed@example.com)");
   }
 
   console.log("\nDone. Dev password for every seeded account: " + DEV_PASSWORD);

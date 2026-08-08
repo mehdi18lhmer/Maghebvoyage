@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import { getLocale } from "next-intl/server";
 import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthSessionProvider } from "@/components/providers/session-provider";
+import { directionFor } from "@/i18n/routing";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -103,7 +105,7 @@ function siteJsonLd() {
         publisher: { "@id": `${url}/#organization` },
         potentialAction: {
           "@type": "SearchAction",
-          target: `${url}/voyages?q={search_term_string}`,
+          target: `${url}/fr/voyages?q={search_term_string}`,
           "query-input": "required name=search_term_string",
         },
       },
@@ -111,10 +113,19 @@ function siteJsonLd() {
   };
 }
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Resolves to the current [locale] segment on client-facing routes, and to
+  // the default ("fr") on everything outside it — the agency/admin/auth
+  // routes that never carry a locale param. Either way this is the one place
+  // <html lang>/<html dir> get set; next-intl's request config (src/i18n/
+  // request.ts) is what makes getLocale() safe to call unconditionally here.
+  const locale = await getLocale();
+  const dir = directionFor(locale);
+
   return (
     <html
-      lang="fr"
+      lang={locale}
+      dir={dir}
       className={`${geistSans.variable} ${geistMono.variable} ${jakarta.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">

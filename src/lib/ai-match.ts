@@ -1,5 +1,15 @@
-import { formatPrice, tripTypeLabel } from "./format";
+import { formatPrice } from "./format";
 import type { Agency, GroupTrip, TripType } from "./types";
+
+/**
+ * Minimal shape of next-intl's translator — kept loose rather than importing
+ * next-intl's own type, so this file stays framework-agnostic (see the note
+ * below on why it can't import Prisma either). The caller builds the real
+ * thing via `getTranslations({ locale, namespace: "AiMatch" })` server-side.
+ */
+type Translator = (key: string, values?: Record<string, string | number>) => string;
+/** Separate namespace for trip-type labels — same translator shape. */
+type TypeTranslator = (key: TripType) => string;
 
 /**
  * CDC §C.2's weighted scoring engine — deliberately data-source-agnostic.
@@ -87,7 +97,9 @@ function norm(input: string): string {
 function scoreTripDetailed(
   trip: GroupTrip,
   form: AiFormData,
-  agencyZones: string[]
+  agencyZones: string[],
+  t: Translator,
+  tType: TypeTranslator
 ): {
   score: number;
   reasons: MatchReason[];
@@ -106,7 +118,9 @@ function scoreTripDetailed(
     (haystack.includes(wanted) || wanted.split(/\s+/).some((w) => w.length > 2 && haystack.includes(w)));
   if (destinationMet) score += 3;
   reasons.push({
-    label: destinationMet ? `Destination : ${trip.destination}` : "Autre destination que celle demandée",
+    label: destinationMet
+      ? t("destination", { destination: trip.destination })
+      : t("destinationNotMet"),
     points: 3,
     met: destinationMet,
   });
@@ -118,13 +132,13 @@ function scoreTripDetailed(
     const wantedAt = new Date(form.exactStartDate).getTime();
     const startAt = new Date(trip.startDate).getTime();
     datesMet = Math.abs(wantedAt - startAt) <= 14 * 24 * 60 * 60 * 1000;
-    dateLabel = datesMet ? "Départ proche de vos dates" : "Dates éloignées de votre demande";
+    dateLabel = datesMet ? t("datesNear") : t("datesFar");
     if (datesMet) score += 3;
   } else {
     // Flexible dates match loosely by definition, but only lightly — otherwise
     // every trip ties and the ranking says nothing.
     datesMet = true;
-    dateLabel = "Vos dates sont flexibles";
+    dateLabel = t("datesFlexible");
     score += 1;
   }
   reasons.push({ label: dateLabel, points: form.dateFlexible ? 1 : 3, met: datesMet });
@@ -133,7 +147,7 @@ function scoreTripDetailed(
   const budgetMet = trip.totalPrice <= form.budgetMax;
   if (budgetMet) score += 2;
   reasons.push({
-    label: budgetMet ? "Dans votre budget" : "Au-dessus de votre budget",
+    label: budgetMet ? t("budgetMet") : t("budgetNotMet"),
     points: 2,
     met: budgetMet,
   });
@@ -143,7 +157,7 @@ function scoreTripDetailed(
   const typeMet = form.tripTypes.includes(trip.tripType);
   if (typeMet) score += 2;
   reasons.push({
-    label: typeMet ? `Type recherché : ${tripTypeLabel(trip.tripType)}` : "Autre type de voyage",
+    label: typeMet ? t("typeMet", { type: tType(trip.tripType) }) : t("typeNotMet"),
     points: 2,
     met: typeMet,
   });
@@ -151,12 +165,12 @@ function scoreTripDetailed(
   // Shared interest tags, +1 each
   const requestTags = norm([form.activities, form.constraints, form.style].join(" "))
     .split(/[^a-z0-9]+/)
-    .filter((t) => t.length > 2);
+    .filter((tag) => tag.length > 2);
   const shared = trip.aiTags.filter((tag) => requestTags.includes(norm(tag)));
   if (shared.length > 0) {
     score += shared.length;
     reasons.push({
-      label: `Correspond à vos envies : ${shared.join(", ")}`,
+      label: t("matchesInterests", { tags: shared.join(", ") }),
       points: shared.length,
       met: true,
     });
@@ -166,7 +180,7 @@ function scoreTripDetailed(
   // decision-relevant thing on the card, so it's surfaced as context.
   const remaining = trip.totalSpots - trip.bookedSpots;
   if (remaining > 0 && remaining <= 3) {
-    reasons.push({ label: `Plus que ${remaining} place${remaining > 1 ? "s" : ""}`, points: 0, met: true });
+    reasons.push({ label: t("fewSeats", { n: remaining }), points: 0, met: true });
   }
 
   return { score, reasons };
@@ -285,17 +299,23 @@ function fallbackResult(publishedTrips: GroupTrip[]): MatchResult {
  * mandatory fallback rule ("the user must never see a blank result screen").
  */
 /** States the gaps between what was asked for and what a trip offers. */
-function buildWarnings(trip: GroupTrip, form: AiFormData): string[] {
+function buildWarnings(
+  trip: GroupTrip,
+  form: AiFormData,
+  t: Translator,
+  tType: TypeTranslator,
+  locale: string
+): string[] {
   const warnings: string[] = [];
 
   if (trip.totalPrice > form.budgetMax) {
     warnings.push(
-      `${formatPrice(trip.totalPrice - form.budgetMax)} au-dessus du budget indiqué`
+      t("warningOverBudget", { amount: formatPrice(trip.totalPrice - form.budgetMax, locale) })
     );
   }
 
   if (form.tripTypes.length > 0 && !form.tripTypes.includes(trip.tripType)) {
-    warnings.push(`Type ${tripTypeLabel(trip.tripType)}, pas celui demandé`);
+    warnings.push(t("warningWrongType", { type: tType(trip.tripType) }));
   }
 
   // Only meaningful when they actually named a duration.
@@ -303,15 +323,22 @@ function buildWarnings(trip: GroupTrip, form: AiFormData): string[] {
   if (form.dateFlexible && Number.isFinite(wantedDays) && wantedDays > 0) {
     const diff = Math.abs(trip.durationDays - wantedDays);
     if (diff >= 2) {
-      warnings.push(`${trip.durationDays} jours au lieu des ${wantedDays} souhaités`);
+      warnings.push(t("warningDuration", { days: trip.durationDays, wanted: wantedDays }));
     }
   }
 
   return warnings;
 }
 
-export function matchTrips(trips: GroupTrip[], agencies: Agency[], form: AiFormData): MatchResult {
-  const candidates = trips.filter((t) => t.status === "PUBLISHED");
+export function matchTrips(
+  trips: GroupTrip[],
+  agencies: Agency[],
+  form: AiFormData,
+  t: Translator,
+  tType: TypeTranslator,
+  locale: string
+): MatchResult {
+  const candidates = trips.filter((trip) => trip.status === "PUBLISHED");
   try {
     const zonesByAgency = new Map<string, string[]>();
     for (const agency of agencies) {
@@ -322,7 +349,7 @@ export function matchTrips(trips: GroupTrip[], agencies: Agency[], form: AiFormD
     const ranked = candidates
       .map((trip) => ({
         trip,
-        ...scoreTripDetailed(trip, form, zonesByAgency.get(trip.agencyId) ?? []),
+        ...scoreTripDetailed(trip, form, zonesByAgency.get(trip.agencyId) ?? [], t, tType),
       }))
       .sort((a, b) => {
         if (b.score !== a.score) return b.score - a.score;
@@ -354,7 +381,7 @@ export function matchTrips(trips: GroupTrip[], agencies: Agency[], form: AiFormD
           // Only the criteria that actually landed — a list of things the trip
           // failed reads as an apology, not a recommendation.
           reasons: r.reasons.filter((reason) => reason.met),
-          warnings: buildWarnings(r.trip, form),
+          warnings: buildWarnings(r.trip, form, t, tType, locale),
         })),
       };
     }

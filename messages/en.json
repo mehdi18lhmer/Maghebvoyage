@@ -1,0 +1,529 @@
+{
+  "LanguageSwitcher": {
+    "label": "Change language"
+  },
+  "AiPlanner": {
+    "hero": {
+      "badge": "AI Assistant",
+      "title": "Let's find your ideal trip",
+      "subtitle": "Talk or type to the assistant — it fills in your request for you and suggests 1 to 3 trips already published by our verified agencies."
+    },
+    "steps": [
+      "Your destination",
+      "Travelers & budget",
+      "Trip type",
+      "Preferences",
+      "Your details"
+    ],
+    "stepOf": "Step {step} of 5",
+    "analyzing": {
+      "title": "Analyzing your request…",
+      "subtitle": "We're looking for the trips that best match your criteria."
+    },
+    "errors": {
+      "destination": "Enter a destination.",
+      "duration": "Enter the desired duration.",
+      "exactDates": "Enter your exact dates.",
+      "travelers": "Enter the number of travelers.",
+      "tripType": "Select at least one trip type.",
+      "contact": "Name and email are required.",
+      "consent": "You must accept the terms and GDPR processing to continue.",
+      "submit": "Couldn't calculate your recommendations right now. Try again."
+    },
+    "step1": {
+      "destination": "Desired destination *",
+      "destinationPlaceholder": "Morocco, Tunisia, Sahara, Marrakech...",
+      "dateFlexibility": "Date flexibility *",
+      "datesFlexible": "Flexible dates",
+      "datesExact": "Exact dates",
+      "duration": "Desired duration (days) *",
+      "startDate": "Departure date *",
+      "endDate": "Return date *"
+    },
+    "step2": {
+      "travelers": "Travelers *",
+      "adults": "Adults *",
+      "children": "Children",
+      "budgetMax": "Maximum budget per person *",
+      "tiers": {
+        "economy": "Budget",
+        "medium": "Mid-range",
+        "comfort": "Comfort",
+        "premium": "Premium"
+      }
+    },
+    "step3": {
+      "tripTypes": "Trip types *",
+      "style": "Trip style",
+      "stylePlaceholder": "Adventure, relaxation, immersion...",
+      "accommodation": "Preferred accommodation",
+      "accommodationPlaceholder": "Riad, hotel, bivouac...",
+      "transport": "Include transport"
+    },
+    "step4": {
+      "activities": "Preferred activities",
+      "activitiesPlaceholder": "desert, hiking, beach, food...",
+      "constraints": "Special requirements",
+      "constraintsPlaceholder": "Reduced mobility, dietary needs, family trip...",
+      "language": "Preferred guide language",
+      "languagePlaceholder": "French, English, Arabic..."
+    },
+    "step5": {
+      "name": "Full name *",
+      "email": "Email *",
+      "phone": "Phone",
+      "country": "Country of residence",
+      "gdpr": "I agree that my data may be used to offer me suitable trips (GDPR).",
+      "terms": "I accept the <cgu>Terms of use</cgu>.",
+      "cgu": "Terms of use"
+    },
+    "back": "Back",
+    "continue": "Continue",
+    "seeMySuggestions": "See my suggestions",
+    "recap": {
+      "title": "Summary",
+      "editDetail": "Edit in detail",
+      "backToRecap": "← Back to summary",
+      "subtitle": "Fills in as you talk — there's nothing for you to type.",
+      "destination": "Destination",
+      "dates": "Dates",
+      "datesFlexible": "{n} days (flexible)",
+      "travelers": "Travelers",
+      "travelersValue": "{n} people",
+      "travelersWithChildren": "{n} people (incl. {children, plural, one {# child} other {# children}})",
+      "budgetMax": "Max budget",
+      "type": "Type",
+      "activities": "Activities",
+      "constraints": "Constraints",
+      "toSpecify": "to specify",
+      "name": "Full name *",
+      "email": "Email *",
+      "dictatedPlaceholder": "Dictated by the assistant…",
+      "consentNote": "You must click these yourself — the assistant can't do it for you",
+      "gdpr": "I agree that my data may be used to offer me suitable trips (GDPR).",
+      "terms": "I accept the <cgu>Terms of use</cgu>.",
+      "cgu": "Terms of use",
+      "missingInfo": "{n, plural, one {Still missing # piece of information} other {Still missing # pieces of information}} — tell the assistant, it'll handle it.",
+      "checkBothBoxes": "Check both boxes to continue.",
+      "readyBadge": "Ready to see your trips"
+    }
+  },
+  "Assistant": {
+    "title": "Your assistant",
+    "bookingInProgress": "Booking in progress",
+    "listening": "Listening",
+    "micSilentWarning": "I'm not picking up any sound from your microphone. Check your browser permission, selected mic and input volume — otherwise the assistant talks but hears nothing.",
+    "emptyStatePrompt": "Tell me where you want to go — I'll fill everything in for you ✨",
+    "allReady": "All set — check the 2 boxes in the summary to see your trips.",
+    "voiceTag": "voice",
+    "savedFields": "Saved: {fields}",
+    "suggestionsFallback": "Here are the next available departures, closest to your criteria:",
+    "suggestionsMatched": "Here are the trips that best match your request:",
+    "chosenTrip": "I chose: {title}",
+    "askContactInfo": "Great! I need your name and email to finalize the booking — you can tell me, or fill them in directly below.",
+    "readyToConfirm": "Great! Check your details below, then confirm to move to the deposit payment.",
+    "genericError": "Something went wrong. You can continue via the summary on the right.",
+    "thinking": "Noting it all down…",
+    "quickSuggestions": [
+      "A 5-day desert trek, €700 budget",
+      "How much is the deposit?",
+      "Any spots left in Tunisia?"
+    ],
+    "inputPlaceholder": "Describe your trip or ask a question…",
+    "inputLabel": "Write to the assistant",
+    "send": "Send",
+    "stopMic": "Stop the mic",
+    "talkToAssistant": "Talk to the assistant",
+    "voiceKeyMissing": "Vapi key missing — typing is still available.",
+    "voiceStartFailed": "Startup failed: {cause}",
+    "voiceError": "Vapi error: {cause}",
+    "voiceStartError": "Voice couldn't start: {cause}",
+    "footerNote": "The assistant only answers from trips that are actually published, and never checks the GDPR/terms boxes for you.",
+    "fields": {
+      "destination": "destination",
+      "dateFlexible": "dates",
+      "exactStartDate": "departure date",
+      "exactEndDate": "return date",
+      "desiredDurationDays": "duration",
+      "travelerCount": "travelers",
+      "adults": "adults",
+      "children": "children",
+      "budgetMax": "budget",
+      "tripTypes": "trip type",
+      "style": "style",
+      "accommodation": "accommodation",
+      "transportIncluded": "transport",
+      "activities": "activities",
+      "constraints": "constraints",
+      "language": "language",
+      "name": "name",
+      "email": "email",
+      "phone": "phone",
+      "country": "country"
+    }
+  },
+  "TripSuggestion": {
+    "byAgency": "By {name}",
+    "depositIncluded": "incl. {amount} deposit",
+    "soldOut": "Sold out",
+    "seatsLeft": "{n, plural, one {# spot left} other {# spots left}}",
+    "select": "Choose this trip"
+  },
+  "BookingSummary": {
+    "name": "Full name *",
+    "email": "Email *",
+    "phone": "Phone",
+    "travelers": "Travelers",
+    "depositOnline": "Deposit to pay online ({n, plural, one {# spot} other {# spots}})",
+    "balanceOnSite": "Balance due on site",
+    "gdpr": "I agree that my data may be used for this booking (GDPR).",
+    "terms": "I accept the <cgu>Terms of use</cgu>.",
+    "cgu": "Terms of use",
+    "notEnoughSeats": "Not enough spots left for this number of travelers.",
+    "genericError": "The booking couldn't be created. Try again.",
+    "networkError": "A network error occurred. Try again.",
+    "confirm": "Confirm and pay deposit"
+  },
+  "Results": {
+    "back": "Back",
+    "badgeFallback": "Next available departures",
+    "badgeMatched": "Personalized selection",
+    "titleFallback": "Here are the next available trips",
+    "titleMatched": "Here are our recommendations for you",
+    "subtitleFallback": "We didn't find an exact match for your criteria — here are the closest departures, based on current availability.",
+    "subtitleMatched": "Ranked by what you told us. Each trip explains why it fits you.",
+    "topPick": "Our top recommendation",
+    "matchLabel": "match",
+    "matchRate": "Match rate",
+    "whyMatches": "Why this trip fits you",
+    "goodToKnow": "Good to know",
+    "seeThisTrip": "See this trip",
+    "whyThisTrip": "Why this trip",
+    "interested": "Interested in these trips?",
+    "seeAllTrips": "See all available trips",
+    "noSearch": {
+      "title": "No search in progress",
+      "subtitle": "Fill in the form to receive trip suggestions.",
+      "cta": "Find my trip"
+    }
+  },
+  "AiMatch": {
+    "destination": "Destination: {destination}",
+    "destinationNotMet": "Different destination than requested",
+    "datesNear": "Departure close to your dates",
+    "datesFar": "Dates far from your request",
+    "datesFlexible": "Your dates are flexible",
+    "budgetMet": "Within your budget",
+    "budgetNotMet": "Above your budget",
+    "typeMet": "Type you wanted: {type}",
+    "typeNotMet": "Different trip type",
+    "matchesInterests": "Matches your interests: {tags}",
+    "fewSeats": "{n, plural, one {Only one spot left} other {Only # spots left}}",
+    "warningOverBudget": "{amount} above the stated budget",
+    "warningWrongType": "{type} type, not the one requested",
+    "warningDuration": "{days} days instead of the {wanted} wanted"
+  },
+  "AgencyPage": {
+    "verifiedAgency": "Verified agency",
+    "descriptionFallback": "Group trips organized by {name}, a verified agency on MaghrebVoyage.",
+    "publishedTrips": "Published trips",
+    "noTrips": "This agency has no trips available right now."
+  },
+  "TripDetail": {
+    "back": "Back",
+    "days": "{n} days",
+    "physicalLevel": [
+      "",
+      "Easy",
+      "Moderate",
+      "Active",
+      "Hard",
+      "Extreme"
+    ],
+    "guarantees": [
+      "Cancel via link, no account needed",
+      "Support 7 days a week",
+      "Instant confirmation"
+    ],
+    "facts": {
+      "type": "Type",
+      "level": "Level",
+      "groupSize": "Group size",
+      "groupSizeValue": "Up to {n} people",
+      "meetingPoint": "Meeting point"
+    },
+    "about": "About this trip",
+    "gallery": "Photos",
+    "included": "Included",
+    "notIncluded": "Not included",
+    "program": "Itinerary",
+    "perPerson": "per person",
+    "depositNow": "Deposit due now",
+    "balanceOnSite": "Balance due on site",
+    "soldOut": "Sold out",
+    "bookNow": "Book now",
+    "securePayment": "Secure payment via Stripe",
+    "soldOutNote": "This trip is sold out. Check other departures on the marketplace.",
+    "seeAllTrips": "See all their trips",
+    "otherTripsFrom": "Other trips from {name}"
+  },
+  "StatusBadge": {
+    "trip": {
+      "DRAFT": "Draft",
+      "PUBLISHED": "Published",
+      "FULL": "Full",
+      "CLOSED": "Closed",
+      "CANCELLED": "Cancelled"
+    },
+    "agency": {
+      "PENDING": "Pending",
+      "UNDER_REVIEW": "Under review",
+      "VERIFIED": "Verified",
+      "REJECTED": "Rejected",
+      "SUSPENDED": "Suspended"
+    }
+  },
+  "VoyagesPage": {
+    "title": "All trips",
+    "description": "Browse every group trip published by verified agencies in Morocco, Tunisia and Algeria. Filter by destination, budget and dates.",
+    "heading": "All trips",
+    "subtitle": "Group trips published by verified agencies in Morocco, Tunisia and Algeria."
+  },
+  "Marketplace": {
+    "sortBy": "Sort by",
+    "sortDateAsc": "Departure date",
+    "sortPriceAsc": "Price: low to high",
+    "sortPriceDesc": "Price: high to low",
+    "sortSeatsAsc": "Spots left",
+    "results": "{n, plural, one {# trip available} other {# trips available}}",
+    "noResults": "No trip matches these criteria. Try widening your budget or dates."
+  },
+  "TripFilters": {
+    "filters": "Filters",
+    "destination": "Destination",
+    "allDestinations": "All destinations",
+    "departureMonth": "Departure month",
+    "allMonths": "All months",
+    "budget": "Budget",
+    "budgetMax": "Max budget",
+    "upTo": "Up to {amount}",
+    "reset": "Reset",
+    "tripType": "Trip type",
+    "clear": "Clear"
+  },
+  "SeatsGauge": {
+    "soldOut": "Sold out",
+    "remaining": "{n, plural, one {# spot left} other {# spots left}} of {total}"
+  },
+  "TripCard": {
+    "days": "{n} days",
+    "byAgency": "By {name}",
+    "depositIncluded": "incl. {amount} deposit",
+    "soldOut": "Sold out",
+    "highlightTop": "Recommended",
+    "highlightGood": "Great match",
+    "highlightFallback": "Good option"
+  },
+  "TripType": {
+    "CULTURAL": "Cultural",
+    "DESERT": "Desert",
+    "BEACH": "Beach",
+    "ADVENTURE": "Adventure",
+    "PILGRIMAGE": "Pilgrimage",
+    "CITY_BREAK": "City break",
+    "TREKKING": "Trekking",
+    "GASTRONOMY": "Gastronomy"
+  },
+  "Nav": {
+    "voyages": "Trips",
+    "findTrip": "Find my trip",
+    "howItWorks": "How it works",
+    "becomeAgency": "Become an agency",
+    "login": "Sign in",
+    "menu": "Menu",
+    "brand": "MaghrebVoyage"
+  },
+  "Footer": {
+    "tagline": "The marketplace for small-group trips organized by verified agencies in Morocco, Tunisia and Algeria — built for the diaspora.",
+    "travelHeading": "Travel",
+    "allDestinations": "All destinations",
+    "findTripAi": "Find my trip (AI)",
+    "publishAsAgency": "Publish as an agency",
+    "legalHeading": "Legal",
+    "legal": {
+      "cgu": "Terms of use",
+      "confidentialite": "Privacy",
+      "remboursements": "Refunds",
+      "mentions": "Legal notice"
+    },
+    "copyright": "© {year} MaghrebVoyage. All rights reserved."
+  },
+  "Home": {
+    "hero": {
+      "title1": "Discover the Maghreb",
+      "titleHighlight": "Differently",
+      "subtitle": "Authentic experiences, local agencies, and unforgettable trips.",
+      "searchLabel": "Where do you want to go?",
+      "searchPlaceholder": "Where do you want to go?",
+      "searchButton": "Start my AI search"
+    },
+    "trust": [
+      "Verified agencies",
+      "Secure payment",
+      "Support 7 days a week"
+    ],
+    "destinations": {
+      "heading": "Popular destinations",
+      "seeAll": "See all",
+      "priceFrom": "From {price}",
+      "comingSoon": "Coming soon",
+      "countries": {
+        "Maroc": "Morocco",
+        "Algérie": "Algeria",
+        "Tunisie": "Tunisia"
+      }
+    },
+    "stats": [
+      {
+        "value": "3",
+        "label": "Countries covered"
+      },
+      {
+        "value": "100%",
+        "label": "Verified agencies"
+      },
+      {
+        "value": "Stripe",
+        "label": "Secure payment"
+      },
+      {
+        "value": "7/7",
+        "label": "Responsive support"
+      }
+    ],
+    "howItWorks": {
+      "heading": "How it works",
+      "subtitle": "Three steps between wanting to travel and a booked seat.",
+      "step": "Step {n}",
+      "steps": [
+        {
+          "title": "Describe",
+          "detail": "Tell us where you want to go, when, and your budget. Five quick steps, two minutes."
+        },
+        {
+          "title": "AI finds",
+          "detail": "Our assistant matches your request against trips that are actually available and suggests 1 to 3 options."
+        },
+        {
+          "title": "Book",
+          "detail": "Secure your spot with a card deposit. The balance is settled directly with the agency, on site."
+        }
+      ]
+    },
+    "trustSection": {
+      "heading": "Book with confidence",
+      "badges": [
+        {
+          "title": "Verified agencies",
+          "detail": "Every agency submits a business registration reviewed by our team before publishing a single trip."
+        },
+        {
+          "title": "Secure Stripe payment",
+          "detail": "You only pay a deposit online, on Stripe's own hosted page. No card data ever passes through us."
+        },
+        {
+          "title": "Responsive support",
+          "detail": "A question, a cancellation, something unexpected: our team responds and liaises with the organizing agency."
+        }
+      ]
+    },
+    "testimonials": {
+      "heading": "What our travelers say",
+      "items": [
+        {
+          "quote": "Booking our Atlas trek from Paris took five minutes. The agency contacted us the same day.",
+          "name": "Yasmine K.",
+          "location": "France"
+        },
+        {
+          "quote": "The AI form suggested exactly what we were looking for for a family trip to Djerba, within budget.",
+          "name": "Omar T.",
+          "location": "Canada"
+        },
+        {
+          "quote": "Reassuring to see the agency is verified before paying the deposit online.",
+          "name": "Leïla B.",
+          "location": "Belgium"
+        }
+      ]
+    },
+    "faq": {
+      "heading": "Frequently asked questions",
+      "items": [
+        {
+          "q": "How does the deposit work?",
+          "a": "You only pay a deposit online when booking (at least 10% of the total price). The balance is paid directly to the agency, on site or before departure depending on their terms."
+        },
+        {
+          "q": "Can I cancel my booking?",
+          "a": "Yes. Every confirmation email includes a personal cancellation link — no account needed. The deposit refund is then processed manually by our team."
+        },
+        {
+          "q": "How are agencies verified?",
+          "a": "Every agency submits a file (business registration, areas of activity) reviewed by our team within 48h before they can publish any trip."
+        },
+        {
+          "q": "Does the AI form create a custom offer?",
+          "a": "No. It recommends trips already published by our agencies that match your criteria — dates, budget, trip type. You book a seat on an existing departure."
+        },
+        {
+          "q": "What happens if the agency cancels the trip?",
+          "a": "You're notified immediately by email and your full deposit is refunded as soon as possible."
+        },
+        {
+          "q": "Do I need to create an account to book?",
+          "a": "No. Booking only needs your name, email and phone. Only agencies need an account on the platform."
+        }
+      ]
+    },
+    "cta": {
+      "heading": "Ready to plan your next trip?",
+      "subtitle": "Find the trip that suits you in under two minutes, or browse the marketplace directly.",
+      "findTrip": "Find my trip",
+      "seeAll": "See all trips"
+    }
+  },
+  "Auth": {
+    "loginTitle": "Sign in",
+    "loginSubtitle": "Access your account to book and track your trips.",
+    "registerTitle": "Create an account",
+    "registerSubtitle": "An account is required to use the AI assistant and book a trip.",
+    "tabPassword": "Password",
+    "tabMagicLink": "Magic link",
+    "nameLabel": "Full name",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "confirmPasswordLabel": "Confirm password",
+    "submitLogin": "Sign in",
+    "submitRegister": "Create my account",
+    "submitMagicLink": "Send me a sign-in link",
+    "magicLinkHint": "No password: get a sign-in link by email instead.",
+    "magicLinkSentTitle": "Check your inbox",
+    "magicLinkSentBody": "A sign-in link was sent to {email}. It's valid for 24 hours.",
+    "backToOptions": "Back",
+    "errorInvalidCredentials": "Invalid credentials. Check your email and password.",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "errorRequiredCredentials": "Email and password are required.",
+    "errorRequiredEmail": "Email is required.",
+    "errorPasswordMismatch": "Passwords don't match.",
+    "errorPasswordTooShort": "At least 8 characters.",
+    "errorNameTooShort": "Name is too short.",
+    "noAccount": "Don't have an account yet?",
+    "createAccount": "Create an account",
+    "haveAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "gdprConsent": "I agree to the processing of my personal data in accordance with the <link>privacy policy</link>.",
+    "termsConsent": "I agree to the <link>Terms of Service</link>.",
+    "gateNotice": "Create an account or sign in to continue."
+  }
+}

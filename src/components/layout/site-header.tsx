@@ -1,28 +1,40 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import NextLink from "next/link";
+import { useTranslations } from "next-intl";
 import { Menu } from "lucide-react";
+import { Link, usePathname } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { BrandMark } from "@/components/layout/brand-mark";
+import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { cn } from "@/lib/utils";
-
-const NAV_LINKS = [
-  { href: "/voyages", label: "Voyages" },
-  { href: "/demande", label: "Trouver mon voyage" },
-  { href: "/#comment-ca-marche", label: "Comment ça marche" },
-];
 
 /**
  * Two appearances, per the reference sheet: transparent white-on-photo while
  * sitting over the landing hero, and a solid white bar everywhere else.
  * It swaps to solid once the hero has scrolled past so the links stay legible.
+ *
+ * The primary "Se connecter" CTA points at the client login now (locale-aware,
+ * under `[locale]`) — since the client-accounts pivot, that's who this header
+ * is talking to. Agency/admin `/login` stays reachable from the agency
+ * register page's "already have an account?" link instead of from here.
+ * `/register/agency` still uses plain next/link — it deliberately lives
+ * outside the `[locale]` segment (agency onboarding is out of i18n scope) and
+ * would 404 under a `/fr/register/agency` prefix if it went through
+ * next-intl's Link.
  */
 export function SiteHeader() {
+  const t = useTranslations("Nav");
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
+
+  const NAV_LINKS = [
+    { href: "/voyages", label: t("voyages") },
+    { href: "/demande", label: t("findTrip") },
+    { href: "/#comment-ca-marche", label: t("howItWorks") },
+  ];
 
   // Both the landing and the Lien Magique page open on a full-bleed photograph.
   const overHero = pathname === "/" || pathname.startsWith("/trip/");
@@ -53,7 +65,7 @@ export function SiteHeader() {
           )}
         >
           <BrandMark className={transparent ? "text-white" : "text-primary"} />
-          MaghrebVoyage
+          {t("brand")}
         </Link>
 
         <nav
@@ -83,6 +95,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
+          <LanguageSwitcher transparent={transparent} />
           <Button
             variant="outline"
             size="sm"
@@ -93,10 +106,10 @@ export function SiteHeader() {
             )}
             asChild
           >
-            <Link href="/register/agency">Devenir agence</Link>
+            <NextLink href="/register/agency">{t("becomeAgency")}</NextLink>
           </Button>
           <Button size="sm" className="rounded-lg px-4" asChild>
-            <Link href="/login">Se connecter</Link>
+            <Link href="/login">{t("login")}</Link>
           </Button>
         </div>
 
@@ -111,11 +124,11 @@ export function SiteHeader() {
             </Button>
           </SheetTrigger>
           <SheetContent side="right" className="w-72">
-            <SheetTitle className="sr-only">Menu</SheetTitle>
+            <SheetTitle className="sr-only">{t("menu")}</SheetTitle>
             <div className="flex flex-col gap-6 p-6">
               <Link href="/" className="flex items-center gap-2 font-heading font-bold">
                 <BrandMark className="text-primary" />
-                MaghrebVoyage
+                {t("brand")}
               </Link>
               <nav className="flex flex-col gap-4 text-sm font-medium">
                 {NAV_LINKS.map((link) => (
@@ -124,12 +137,15 @@ export function SiteHeader() {
                   </Link>
                 ))}
               </nav>
+              <div className="flex items-center justify-between gap-2">
+                <LanguageSwitcher />
+              </div>
               <div className="flex flex-col gap-2">
                 <Button variant="outline" asChild>
-                  <Link href="/register/agency">Devenir agence</Link>
+                  <NextLink href="/register/agency">{t("becomeAgency")}</NextLink>
                 </Button>
                 <Button asChild>
-                  <Link href="/login">Se connecter</Link>
+                  <Link href="/login">{t("login")}</Link>
                 </Button>
               </div>
             </div>

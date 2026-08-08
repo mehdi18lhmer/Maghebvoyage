@@ -83,9 +83,10 @@ export function BookingForm({ trip, agencyName }: { trip: GroupTrip; agencyName?
     if (Object.keys(found).length > 0) return;
 
     setSubmitting(true);
-    // Mock. Real flow: POST /api/bookings/initiate creates the PENDING_PAYMENT
-    // booking + cancellationToken, then returns a Stripe Checkout URL to
-    // redirect to. Only the webhook confirms — never this browser return.
+    // Mock — not yet wired to POST /api/bookings/initiate (see task #49: this
+    // Chemin B form still needs the same real-API wiring booking-summary-card.tsx
+    // already has for Chemin A). Only the webhook confirms a real booking —
+    // never this browser return.
     await new Promise((r) => setTimeout(r, 900));
     router.push(
       `/booking/success?trip=${trip.slug}&seats=${numberOfSeats}&name=${encodeURIComponent(

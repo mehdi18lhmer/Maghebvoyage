@@ -4,7 +4,9 @@ import { BookingForm } from "@/components/bookings/booking-form";
 import { getAgencyById, getTripBySlug } from "@/lib/mock-data";
 import { isSoldOut } from "@/lib/format";
 
-export async function generateMetadata({ params }: PageProps<"/booking/[slug]">): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps<"/[locale]/booking/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const trip = getTripBySlug(slug);
   return {
@@ -13,15 +15,15 @@ export async function generateMetadata({ params }: PageProps<"/booking/[slug]">)
   };
 }
 
-export default async function BookingPage({ params }: PageProps<"/booking/[slug]">) {
-  const { slug } = await params;
+export default async function BookingPage({ params }: PageProps<"/[locale]/booking/[slug]">) {
+  const { locale, slug } = await params;
   const trip = getTripBySlug(slug);
   if (!trip) notFound();
 
   // A trip that can't be booked has no booking form — send them back to the
   // public page, which explains why.
   if (trip.status !== "PUBLISHED" || isSoldOut(trip.totalSpots, trip.bookedSpots)) {
-    redirect(`/trip/${trip.slug}`);
+    redirect(`/${locale}/trip/${trip.slug}`);
   }
 
   const agency = getAgencyById(trip.agencyId);

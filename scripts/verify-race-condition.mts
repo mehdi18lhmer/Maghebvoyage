@@ -136,7 +136,6 @@ async function scenarioIdempotency() {
       clientEmail: "ahmed@test.local",
       numberOfSeats: 1,
       totalAmount: "500",
-      cancellationToken: crypto.randomUUID(),
     },
   });
 

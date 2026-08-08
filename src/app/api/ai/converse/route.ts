@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { converseForSlots } from "@/services/ai.service";
 import { EMPTY_AI_FORM, type AiFormData } from "@/lib/ai-match";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { routing } from "@/i18n/routing";
 
 /**
  * Powers the AI planner's "just talk" mode: each turn is extracted into form
@@ -47,6 +48,7 @@ interface ConverseBody {
   message?: unknown;
   history?: unknown;
   form?: unknown;
+  locale?: unknown;
 }
 
 export async function POST(request: Request) {
@@ -87,7 +89,12 @@ export async function POST(request: Request) {
     : [];
 
   const form = sanitizeForm(body.form);
+  const locale =
+    typeof body.locale === "string" &&
+    routing.locales.includes(body.locale as (typeof routing.locales)[number])
+      ? body.locale
+      : routing.defaultLocale;
 
-  const result = await converseForSlots(message, history, form);
+  const result = await converseForSlots(message, history, form, locale);
   return NextResponse.json(result);
 }

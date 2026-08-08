@@ -58,7 +58,6 @@ async function getPlatformStats() {
       clientPhone: b.clientPhone ?? "",
       numberOfSeats: b.numberOfSeats,
       status: b.status,
-      cancellationToken: b.cancellationToken,
       confirmationCode: b.confirmationCode ?? undefined,
       createdAt: b.createdAt.toISOString(),
       tripTitle: b.groupTrip.title,

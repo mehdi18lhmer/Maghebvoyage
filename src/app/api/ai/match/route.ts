@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { matchTrips, EMPTY_AI_FORM, type AiFormData } from "@/lib/ai-match";
 import { getMarketplaceCatalogue } from "@/lib/trip-context";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { routing } from "@/i18n/routing";
 
 /**
  * Phase 2 of CDC §C.2 (the pure-SQL matching pass), run server-side because
@@ -40,16 +42,26 @@ export async function POST(request: Request) {
     );
   }
 
-  let body: { form?: unknown };
+  let body: { form?: unknown; locale?: unknown };
   try {
-    body = (await request.json()) as { form?: unknown };
+    body = (await request.json()) as { form?: unknown; locale?: unknown };
   } catch {
     return NextResponse.json({ error: "Corps de requête invalide." }, { status: 400 });
   }
 
+  const locale =
+    typeof body.locale === "string" &&
+    routing.locales.includes(body.locale as (typeof routing.locales)[number])
+      ? body.locale
+      : routing.defaultLocale;
+
   const form = sanitizeForm(body.form);
-  const { trips, agencies } = await getMarketplaceCatalogue();
-  const result = matchTrips(trips, agencies, form);
+  const [{ trips, agencies }, t, tType] = await Promise.all([
+    getMarketplaceCatalogue(),
+    getTranslations({ locale, namespace: "AiMatch" }),
+    getTranslations({ locale, namespace: "TripType" }),
+  ]);
+  const result = matchTrips(trips, agencies, form, t, tType, locale);
 
   const agencyNames = Object.fromEntries(agencies.map((a) => [a.id, a.name]));
 

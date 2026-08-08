@@ -1,25 +1,35 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Resend from "next-auth/providers/resend";
+import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import type { JWT } from "next-auth/jwt";
+import { send, magicLinkEmailHtml, magicLinkEmailSubject } from "@/services/email.service";
 
 /**
- * CDC §5.1 — "Auth : NextAuth / Auth.js — 3 rôles : ADMIN, AGENCY, CLIENT".
+ * Three roles authenticate now: ADMIN, AGENCY, and — as of this pass — CLIENT.
+ * (Earlier revisions of this file, and CLAUDE.md's CDC brief, deliberately
+ * kept clients account-free; that decision was reversed in-session and this
+ * now intentionally diverges from the checked-in brief. See project memory
+ * for the full context if this looks like drift.)
  *
- * Only ADMIN and AGENCY ever actually authenticate. §2/§G.1/§9.3 are explicit
- * that a client's whole journey — book, pay, cancel — needs no account; V1
- * client "identity" is just plain fields on the Booking row. This provider
- * exists only for the two roles that log in.
+ * Two providers:
+ *  - Credentials + bcrypt, shared by all three roles.
+ *  - Resend (magic link), CLIENT-only in practice — nothing stops an agency
+ *    email from requesting one, but the register/login UI only offers it on
+ *    the client-facing pages.
  *
- * Credentials + bcrypt against the Prisma `User` table directly — no
- * database-session adapter, since a Credentials provider requires the JWT
- * strategy anyway (NextAuth can't verify a password against an adapter).
- * Role and agencyId are embedded in the JWT at sign-in, which is what lets
- * `src/proxy.ts` gate routes without a database round trip on every request.
+ * The Email/magic-link flow fundamentally needs a database adapter (it has
+ * to persist a verification token between "send the email" and "the link
+ * gets clicked" — there's no way to do that statelessly the way Credentials
+ * checks a password inline). Sessions stay JWT regardless — Auth.js
+ * explicitly supports adapter + JWT together, and `src/proxy.ts`'s role
+ * gate depends on reading role/agencyId out of the token without a DB
+ * round trip on every request.
  */
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
   providers: [
@@ -55,17 +65,52 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         };
       },
     }),
+    Resend({
+      apiKey: process.env.RESEND_API_KEY,
+      from: process.env.RESEND_FROM ?? "MaghrebVoyage <onboarding@resend.dev>",
+      // Overrides the provider's generic English-only default so the magic
+      // link matches the app's branding and the visitor's chosen locale.
+      // Auth.js doesn't give this callback a locale directly — it only hands
+      // over the verification `url`, which embeds the `callbackUrl` the
+      // sign-in form requested (see (public)/login/page.tsx, which always
+      // passes a locale-prefixed one, e.g. "/en/account/bookings"). The
+      // locale is read back out of that path's first segment.
+      async sendVerificationRequest({ identifier, url }) {
+        const callbackUrl = new URL(url).searchParams.get("callbackUrl") ?? "";
+        const locale = callbackUrl.replace(/^\//, "").split("/")[0] || "fr";
+        const result = await send({
+          to: identifier,
+          subject: magicLinkEmailSubject(locale),
+          html: magicLinkEmailHtml(url, locale),
+        });
+        if (!result.ok) {
+          // Unlike the fire-and-forget notification emails elsewhere, a
+          // failed sign-in email must surface — the visitor has no other way
+          // to know the link never arrived.
+          throw new Error(`magic-link email failed: ${result.error}`);
+        }
+      },
+    }),
   ],
   callbacks: {
     // Runs on sign-in and on every subsequent request that reads the token —
-    // only the sign-in call has `user`, so role/agencyId are captured once
-    // and carried in the encrypted JWT from then on.
+    // only the sign-in call has `user`. Re-fetches role/agencyId from the DB
+    // rather than trusting the shape handed back by whichever provider
+    // signed this in: Credentials' authorize() attaches them directly, but
+    // the Resend/magic-link flow goes through the Prisma adapter instead,
+    // whose returned user object only reliably carries Auth.js's own core
+    // fields — trusting it would silently leave role/agencyId undefined for
+    // every magic-link sign-in.
     async jwt({ token, user }) {
-      if (user) {
-        // `user` here is exactly what `authorize()` returned above, so these
-        // casts are trusted at the boundary rather than re-validated.
-        token.role = user.role as JWT["role"];
-        token.agencyId = user.agencyId as string | null;
+      if (user?.id) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          include: { agency: { select: { id: true } } },
+        });
+        if (dbUser) {
+          token.role = dbUser.role;
+          token.agencyId = dbUser.agency?.id ?? null;
+        }
       }
       return token;
     },

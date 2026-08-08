@@ -12,7 +12,7 @@ import { conflict, invalid, notFound } from "@/services/errors";
  * them are worth reading before changing anything:
  *
  *  1. `bookedSpots` has exactly two legal writers — `confirmBookingFromWebhook`
- *     (increment) and `cancelBookingByToken` / `cancelBookingByAdmin`
+ *     (increment) and `cancelBookingByUser` / `cancelBookingByAdmin`
  *     (decrement). CDC §D states this as an invariant, not a preference.
  *
  *  2. Both writers use a single conditional `updateMany`, never a read
@@ -27,17 +27,9 @@ export function generateConfirmationCode(): string {
   return `MV-${crypto.randomInt(0, 1_000_000).toString().padStart(6, "0")}`;
 }
 
-/**
- * §F — the client's only credential for cancelling. §10 requires it to be a
- * random UUID: never derived from the booking id, never guessable, because
- * anyone holding it can cancel the booking without logging in.
- */
-export function generateCancellationToken(): string {
-  return crypto.randomUUID();
-}
-
 export interface InitiateBookingInput {
   groupTripId: string;
+  userId: string;
   clientName: string;
   clientEmail: string;
   clientPhone?: string;
@@ -92,6 +84,7 @@ export async function initiateBooking(input: InitiateBookingInput) {
     data: {
       groupTripId: trip.id,
       agencyId: trip.agencyId,
+      userId: input.userId,
       travelRequestId: input.travelRequestId ?? null,
       clientName: input.clientName.trim(),
       clientEmail: input.clientEmail.trim().toLowerCase(),
@@ -99,7 +92,6 @@ export async function initiateBooking(input: InitiateBookingInput) {
       clientCountry: input.clientCountry?.trim() || null,
       numberOfSeats: input.numberOfSeats,
       totalAmount: new Prisma.Decimal(Number(trip.totalPrice) * input.numberOfSeats),
-      cancellationToken: generateCancellationToken(),
       notes: input.notes?.trim() || null,
       status: BookingStatus.PENDING_PAYMENT,
     },
@@ -236,20 +228,22 @@ export async function confirmBookingFromWebhook(params: {
 }
 
 /**
- * §G.1 — client cancels with the token from their confirmation email.
+ * §G.1 — client cancels from their account dashboard (superseding the
+ * original token-link design once clients had accounts to log into — see
+ * CLAUDE.md's client-accounts pivot). Ownership is enforced by matching the
+ * session's userId against `booking.userId` instead of a bearer token.
  *
  * Mirrors the confirmation path exactly: the seat is released with the same
  * single-statement conditional update, guarded on the booking still being
- * CONFIRMED. That guard is also what makes the token effectively single-use
- * (§10) — replaying it after cancellation matches nothing.
+ * CONFIRMED.
  */
-export async function cancelBookingByToken(token: string, reason?: string) {
+export async function cancelBookingByUser(bookingId: string, userId: string, reason?: string) {
   const booking = await prisma.booking.findUnique({
-    where: { cancellationToken: token },
+    where: { id: bookingId },
     include: { groupTrip: true, agency: true },
   });
 
-  if (!booking) throw notFound("Réservation introuvable ou lien invalide.");
+  if (!booking || booking.userId !== userId) throw notFound("Réservation introuvable.");
 
   if (booking.status === BookingStatus.CANCELLED || booking.status === BookingStatus.REFUNDED) {
     throw conflict("Cette réservation a déjà été annulée.");

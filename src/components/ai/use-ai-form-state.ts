@@ -1,20 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import { EMPTY_AI_FORM, missingRequiredFields, type AiFormData, type MatchResult } from "@/lib/ai-match";
 import type { TripType } from "@/lib/types";
 
 const DRAFT_KEY = "mv_ai_form_draft";
 const RESULT_KEY = "mv_ai_form_result";
-
-export const STEP_TITLES = [
-  "Votre destination",
-  "Voyageurs & budget",
-  "Type de voyage",
-  "Préférences",
-  "Vos coordonnées",
-];
 
 /**
  * All state and behaviour for the 5-step planner, extracted out of the wizard
@@ -27,6 +20,8 @@ export const STEP_TITLES = [
  */
 export function useAiFormState() {
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations("AiPlanner.errors");
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<AiFormData>(EMPTY_AI_FORM);
   const [error, setError] = useState<string | null>(null);
@@ -78,22 +73,22 @@ export function useAiFormState() {
 
   function validateStep(currentStep: number): string | null {
     if (currentStep === 1) {
-      if (!form.destination.trim()) return "Indiquez une destination.";
-      if (form.dateFlexible && !form.desiredDurationDays) return "Indiquez la durée souhaitée.";
+      if (!form.destination.trim()) return t("destination");
+      if (form.dateFlexible && !form.desiredDurationDays) return t("duration");
       if (!form.dateFlexible && (!form.exactStartDate || !form.exactEndDate)) {
-        return "Indiquez vos dates exactes.";
+        return t("exactDates");
       }
     }
     if (currentStep === 2) {
-      if (!form.travelerCount || !form.adults) return "Indiquez le nombre de voyageurs.";
+      if (!form.travelerCount || !form.adults) return t("travelers");
     }
     if (currentStep === 3) {
-      if (form.tripTypes.length === 0) return "Sélectionnez au moins un type de voyage.";
+      if (form.tripTypes.length === 0) return t("tripType");
     }
     if (currentStep === 5) {
-      if (!form.name.trim() || !form.email.trim()) return "Le nom et l'email sont requis.";
+      if (!form.name.trim() || !form.email.trim()) return t("contact");
       if (!form.gdprConsent || !form.termsAccepted) {
-        return "Vous devez accepter les CGU et le traitement RGPD pour continuer.";
+        return t("consent");
       }
     }
     return null;
@@ -133,7 +128,7 @@ export function useAiFormState() {
       const res = await fetch("/api/ai/match", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ form }),
+        body: JSON.stringify({ form, locale }),
       });
       if (!res.ok) throw new Error("match request failed");
       const matches = (await res.json()) as MatchResult & { agencyNames: Record<string, string> };
@@ -154,7 +149,7 @@ export function useAiFormState() {
     } catch {
       // §C.3's "never a blank screen" applies to the request itself too — a
       // failed match call must degrade to an explicit retry, not a dead end.
-      setError("Impossible de calculer vos recommandations pour le moment. Réessayez.");
+      setError(t("submit"));
     } finally {
       setAnalyzing(false);
     }

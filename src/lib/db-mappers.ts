@@ -70,7 +70,7 @@ export function mapBooking(row: DbBooking): Booking {
     clientPhone: row.clientPhone ?? "",
     numberOfSeats: row.numberOfSeats,
     status: row.status,
-    cancellationToken: row.cancellationToken,
+    userId: row.userId ?? undefined,
     confirmationCode: row.confirmationCode ?? undefined,
     paymentId: row.paymentId ?? undefined,
     createdAt: row.createdAt.toISOString(),

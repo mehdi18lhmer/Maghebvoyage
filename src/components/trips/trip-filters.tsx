@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { formatPrice, tripTypeLabel } from "@/lib/format";
+import { formatPrice } from "@/lib/format";
 import type { TripType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -42,15 +43,21 @@ export function TripFilters({
   state,
   onChange,
   destinations,
+  destinationLabels,
   months,
   budgetCap,
 }: {
   state: TripFiltersState;
   onChange: (next: TripFiltersState) => void;
   destinations: string[];
+  /** Display label per canonical destination value (translated country name). */
+  destinationLabels?: Record<string, string>;
   months: { value: string; label: string }[];
   budgetCap: number;
 }) {
+  const locale = useLocale();
+  const t = useTranslations("TripFilters");
+  const tType = useTranslations("TripType");
   const budgetActive = state.budgetMax < budgetCap;
   const typesActive = state.types.length > 0;
 
@@ -64,34 +71,34 @@ export function TripFilters({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="hidden items-center gap-2 pr-1 text-sm font-semibold sm:flex">
+      <span className="hidden items-center gap-2 pr-1 text-sm font-semibold sm:flex rtl:pr-0 rtl:pl-1">
         <SlidersHorizontal className="size-4" />
-        Filtres
+        {t("filters")}
       </span>
 
       <Select
         value={state.destination}
         onValueChange={(destination) => onChange({ ...state, destination })}
       >
-        <SelectTrigger className={cn(PILL, "w-auto gap-2")} aria-label="Destination">
-          <SelectValue placeholder="Destination" />
+        <SelectTrigger className={cn(PILL, "w-auto gap-2")} aria-label={t("destination")}>
+          <SelectValue placeholder={t("destination")} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Toutes destinations</SelectItem>
+          <SelectItem value="all">{t("allDestinations")}</SelectItem>
           {destinations.map((d) => (
             <SelectItem key={d} value={d}>
-              {d}
+              {destinationLabels?.[d] ?? d}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
 
       <Select value={state.month} onValueChange={(month) => onChange({ ...state, month })}>
-        <SelectTrigger className={cn(PILL, "w-auto gap-2")} aria-label="Mois de départ">
-          <SelectValue placeholder="Mois de départ" />
+        <SelectTrigger className={cn(PILL, "w-auto gap-2")} aria-label={t("departureMonth")}>
+          <SelectValue placeholder={t("departureMonth")} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Tous les mois</SelectItem>
+          <SelectItem value="all">{t("allMonths")}</SelectItem>
           {months.map((m) => (
             <SelectItem key={m.value} value={m.value}>
               {m.label}
@@ -106,15 +113,15 @@ export function TripFilters({
             type="button"
             className={cn(PILL, "inline-flex items-center gap-2", budgetActive && "border-primary text-primary")}
           >
-            {budgetActive ? `Jusqu'à ${formatPrice(state.budgetMax)}` : "Budget"}
+            {budgetActive ? t("upTo", { amount: formatPrice(state.budgetMax, locale) }) : t("budget")}
             <ChevronDown className="size-4 opacity-60" />
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-72" align="start">
           <div className="space-y-3">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Budget max</span>
-              <span className="font-semibold">{formatPrice(state.budgetMax)}</span>
+              <span className="text-muted-foreground">{t("budgetMax")}</span>
+              <span className="font-semibold">{formatPrice(state.budgetMax, locale)}</span>
             </div>
             <Slider
               value={[state.budgetMax]}
@@ -130,7 +137,7 @@ export function TripFilters({
                 className="w-full"
                 onClick={() => onChange({ ...state, budgetMax: budgetCap })}
               >
-                Réinitialiser
+                {t("reset")}
               </Button>
             )}
           </div>
@@ -143,7 +150,7 @@ export function TripFilters({
             type="button"
             className={cn(PILL, "inline-flex items-center gap-2", typesActive && "border-primary text-primary")}
           >
-            Type de voyage
+            {t("tripType")}
             {typesActive && (
               <span className="rounded-full bg-primary px-1.5 text-xs text-primary-foreground">
                 {state.types.length}
@@ -162,7 +169,7 @@ export function TripFilters({
                     variant={active ? "default" : "outline"}
                     className={cn("cursor-pointer px-3 py-1", !active && "text-muted-foreground")}
                   >
-                    {tripTypeLabel(type)}
+                    {tType(type)}
                   </Badge>
                 </button>
               );
@@ -181,7 +188,7 @@ export function TripFilters({
           }
         >
           <X className="size-3.5" />
-          Effacer
+          {t("clear")}
         </Button>
       )}
     </div>

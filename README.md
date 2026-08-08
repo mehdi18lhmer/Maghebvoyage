@@ -54,6 +54,11 @@ Seeded accounts (password for all of them: `Password123`):
 | Agency | `hello@carthageheritage.tn` | Verified |
 | Agency | `team@essaouirablue.ma` | Verified |
 | Agency | `info@saharastarscamp.ma` | Under review |
+| Client | `ahmed@example.com` | Owns the seeded confirmed booking |
+
+Admin/agency accounts log in at `/login` (no locale prefix). Clients log in at
+`/[locale]/login` (e.g. `/fr/login`), which also offers passwordless
+sign-in via a magic link (Resend) alongside the password form.
 
 ### 3. Run it
 
@@ -99,6 +104,7 @@ See [CLAUDE.md](CLAUDE.md) for the complete spec, business rules, and email list
 
 ## Known gaps
 
-- The public marketplace pages (`/voyages`, `/trip/[slug]`, `/agence/[slug]`) and the standalone `/booking/[slug]`, `/booking/success`, `/booking/cancel` pages still render from `src/lib/mock-data.ts`, not the real database. The AI planner's chat-based booking flow (`/demande`) is fully wired to Postgres end-to-end, including the Stripe redirect — but reaching a real trip's booking page directly (the "Lien Magique" share-link path) currently shows mock data instead.
+- The public marketplace pages (`/voyages`, `/trip/[slug]`, `/agence/[slug]`) and the standalone `/booking/[slug]`, `/booking/success` pages still render from `src/lib/mock-data.ts`, not the real database. The AI planner's chat-based booking flow (`/demande`) is fully wired to Postgres end-to-end, including the Stripe redirect — but reaching a real trip's booking page directly (the "Lien Magique" share-link path) currently shows mock data, and its booking form still submits to a mock `setTimeout` instead of `/api/bookings/initiate`.
 - Agency and admin dashboards are fully wired to real data.
 - The E1 confirmation email and the E14 7-day-reminder cron aren't wired yet — both depend on `TravelRequest` rows that nothing currently writes to Postgres.
+- **Client accounts pivot (diverges from CLAUDE.md's checked-in CDC brief — see the file's own note that this brief wins where they conflict, and the pivot itself further overrides it):** clients now need an account (password or magic-link) to book, created at `/[locale]/register` or `/[locale]/login`. This replaced the original token-link cancellation flow — `/booking/cancel` no longer exists, and `cancelBookingByUser` in `bookings.service.ts` checks the session's `userId` instead. Two pieces of this pivot aren't finished yet: the `/demande` AI planner and the booking-confirmation step don't actually gate on a session yet (the API routes do enforce it, but there's no redirect-to-login UI in front of them), and `/account/bookings` — where the E2 email's "manage/cancel my booking" link points — doesn't exist yet, so that link currently 404s.

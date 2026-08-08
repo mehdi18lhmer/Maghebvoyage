@@ -1,38 +1,49 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { BadgeCheck, Mail, MapPin, Phone } from "lucide-react";
 import { TripCard } from "@/components/trips/trip-card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { getAgencyBySlug, getAllAgencies, getTripsByAgency } from "@/lib/mock-data";
-import { tripTypeLabel } from "@/lib/format";
+import { routing } from "@/i18n/routing";
+import { localeAlternates } from "@/i18n/alternates";
 
 export function generateStaticParams() {
-  return getAllAgencies().map((a) => ({ slug: a.slug }));
+  return routing.locales.flatMap((locale) => getAllAgencies().map((a) => ({ locale, slug: a.slug })));
 }
 
-export async function generateMetadata({ params }: PageProps<"/agence/[slug]">): Promise<Metadata> {
-  const { slug } = await params;
+export async function generateMetadata({
+  params,
+}: PageProps<"/[locale]/agence/[slug]">): Promise<Metadata> {
+  const { locale, slug } = await params;
   const agency = getAgencyBySlug(slug);
   if (!agency) return {};
-  const description = agency.description || `Voyages en groupe organisés par ${agency.name}, agence vérifiée sur MaghrebVoyage.`;
+  const t = await getTranslations({ locale, namespace: "AgencyPage" });
+  const description = agency.description || t("descriptionFallback", { name: agency.name });
   return {
     title: agency.name,
     description,
-    alternates: { canonical: `/agence/${agency.slug}` },
+    alternates: {
+      canonical: `/${locale}/agence/${agency.slug}`,
+      languages: localeAlternates(`/agence/${agency.slug}`),
+    },
     openGraph: {
       title: `${agency.name} | MaghrebVoyage`,
       description,
-      url: `/agence/${agency.slug}`,
+      url: `/${locale}/agence/${agency.slug}`,
       images: agency.logoUrl ? [agency.logoUrl] : undefined,
     },
   };
 }
 
-export default async function AgencyPublicPage({ params }: PageProps<"/agence/[slug]">) {
-  const { slug } = await params;
+export default async function AgencyPublicPage({ params }: PageProps<"/[locale]/agence/[slug]">) {
+  const { locale, slug } = await params;
   const agency = getAgencyBySlug(slug);
   if (!agency) notFound();
+
+  const t = await getTranslations({ locale, namespace: "AgencyPage" });
+  const tType = await getTranslations({ locale, namespace: "TripType" });
 
   const publishedTrips = getTripsByAgency(agency.id).filter(
     (t) => t.status === "PUBLISHED" || t.status === "FULL"
@@ -48,9 +59,9 @@ export default async function AgencyPublicPage({ params }: PageProps<"/agence/[s
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="font-heading text-2xl font-extrabold tracking-tight">{agency.name}</h1>
             {agency.verificationStatus === "VERIFIED" && (
-              <span className="flex items-center gap-1 text-success" title="Agence vérifiée">
+              <span className="flex items-center gap-1 text-success" title={t("verifiedAgency")}>
                 <BadgeCheck className="size-4" />
-                <span className="sr-only">Agence vérifiée</span>
+                <span className="sr-only">{t("verifiedAgency")}</span>
               </span>
             )}
             <StatusBadge kind="agency" status={agency.verificationStatus} />
@@ -71,9 +82,9 @@ export default async function AgencyPublicPage({ params }: PageProps<"/agence/[s
             </span>
           </div>
           <div className="flex flex-wrap gap-1.5 pt-1">
-            {agency.tripTypes.map((t) => (
-              <span key={t} className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium">
-                {tripTypeLabel(t)}
+            {agency.tripTypes.map((type) => (
+              <span key={type} className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium">
+                {tType(type)}
               </span>
             ))}
           </div>
@@ -82,10 +93,10 @@ export default async function AgencyPublicPage({ params }: PageProps<"/agence/[s
 
       <section className="mt-10 space-y-4">
         <h2 className="text-xl font-semibold">
-          Voyages publiés {publishedTrips.length > 0 && `(${publishedTrips.length})`}
+          {t("publishedTrips")} {publishedTrips.length > 0 && `(${publishedTrips.length})`}
         </h2>
         {publishedTrips.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Cette agence n’a aucun voyage disponible pour le moment.</p>
+          <p className="text-sm text-muted-foreground">{t("noTrips")}</p>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {publishedTrips.map((trip) => (

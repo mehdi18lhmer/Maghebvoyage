@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import { Check, Mail, MapPin, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { getAgencyById, getTripBySlug } from "@/lib/mock-data";
 import { formatDateRange, formatPrice } from "@/lib/format";
+import { Link } from "@/i18n/navigation";
 
 export const metadata: Metadata = {
   title: "Réservation confirmée",
@@ -21,7 +21,9 @@ function mockConfirmationCode() {
   return `MV-${Math.floor(100000 + Math.random() * 900000)}`;
 }
 
-export default async function BookingSuccessPage({ searchParams }: PageProps<"/booking/success">) {
+export default async function BookingSuccessPage({
+  searchParams,
+}: PageProps<"/[locale]/booking/success">) {
   const params = await searchParams;
   const tripSlug = typeof params.trip === "string" ? params.trip : undefined;
   const seats = typeof params.seats === "string" ? Math.max(Number(params.seats) || 1, 1) : 1;

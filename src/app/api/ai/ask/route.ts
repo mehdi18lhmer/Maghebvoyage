@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { answerTripQuestion } from "@/services/ai.service";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { routing } from "@/i18n/routing";
 
 /**
  * The assistant's only entry point from the browser.
@@ -19,6 +20,7 @@ const WINDOW_SECONDS = 60;
 interface AskBody {
   question?: unknown;
   history?: unknown;
+  locale?: unknown;
 }
 
 export async function POST(request: Request) {
@@ -64,7 +66,13 @@ export async function POST(request: Request) {
         .map((m) => ({ role: m.role, content: m.content.slice(0, 2000) }))
     : [];
 
+  const locale =
+    typeof body.locale === "string" &&
+    routing.locales.includes(body.locale as (typeof routing.locales)[number])
+      ? body.locale
+      : routing.defaultLocale;
+
   // answerTripQuestion never throws — it degrades instead (§C.3).
-  const result = await answerTripQuestion(question, history);
+  const result = await answerTripQuestion(question, history, locale);
   return NextResponse.json(result);
 }

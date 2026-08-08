@@ -1,0 +1,529 @@
+{
+  "LanguageSwitcher": {
+    "label": "Changer de langue"
+  },
+  "AiPlanner": {
+    "hero": {
+      "badge": "Assistant IA",
+      "title": "Trouvons votre voyage idéal",
+      "subtitle": "Parlez ou écrivez à l'assistant — il remplit votre demande pour vous et vous propose 1 à 3 voyages déjà publiés par nos agences vérifiées."
+    },
+    "steps": [
+      "Votre destination",
+      "Voyageurs & budget",
+      "Type de voyage",
+      "Préférences",
+      "Vos coordonnées"
+    ],
+    "stepOf": "Étape {step} sur 5",
+    "analyzing": {
+      "title": "Analyse de votre demande…",
+      "subtitle": "Nous cherchons les voyages qui correspondent le mieux à vos critères."
+    },
+    "errors": {
+      "destination": "Indiquez une destination.",
+      "duration": "Indiquez la durée souhaitée.",
+      "exactDates": "Indiquez vos dates exactes.",
+      "travelers": "Indiquez le nombre de voyageurs.",
+      "tripType": "Sélectionnez au moins un type de voyage.",
+      "contact": "Le nom et l'email sont requis.",
+      "consent": "Vous devez accepter les CGU et le traitement RGPD pour continuer.",
+      "submit": "Impossible de calculer vos recommandations pour le moment. Réessayez."
+    },
+    "step1": {
+      "destination": "Destination souhaitée *",
+      "destinationPlaceholder": "Maroc, Tunisie, Sahara, Marrakech...",
+      "dateFlexibility": "Flexibilité des dates *",
+      "datesFlexible": "Dates flexibles",
+      "datesExact": "Dates précises",
+      "duration": "Durée souhaitée (jours) *",
+      "startDate": "Date de départ *",
+      "endDate": "Date de retour *"
+    },
+    "step2": {
+      "travelers": "Voyageurs *",
+      "adults": "Adultes *",
+      "children": "Enfants",
+      "budgetMax": "Budget maximum par personne *",
+      "tiers": {
+        "economy": "Économique",
+        "medium": "Moyen",
+        "comfort": "Confort",
+        "premium": "Premium"
+      }
+    },
+    "step3": {
+      "tripTypes": "Types de voyage *",
+      "style": "Style de voyage",
+      "stylePlaceholder": "Aventure, détente, immersion...",
+      "accommodation": "Hébergement préféré",
+      "accommodationPlaceholder": "Riad, hôtel, bivouac...",
+      "transport": "Transport inclus souhaité"
+    },
+    "step4": {
+      "activities": "Activités préférées",
+      "activitiesPlaceholder": "désert, randonnée, plage, gastronomie...",
+      "constraints": "Contraintes particulières",
+      "constraintsPlaceholder": "Mobilité réduite, régime alimentaire, voyage en famille...",
+      "language": "Langue préférée du guide",
+      "languagePlaceholder": "Français, anglais, arabe..."
+    },
+    "step5": {
+      "name": "Nom complet *",
+      "email": "Email *",
+      "phone": "Téléphone",
+      "country": "Pays de résidence",
+      "gdpr": "J'accepte que mes données soient utilisées pour me proposer des voyages adaptés (RGPD).",
+      "terms": "J'accepte les <cgu>CGU</cgu>.",
+      "cgu": "CGU"
+    },
+    "back": "Retour",
+    "continue": "Continuer",
+    "seeMySuggestions": "Voir mes suggestions",
+    "recap": {
+      "title": "Récapitulatif",
+      "editDetail": "Modifier en détail",
+      "backToRecap": "← Revenir au récapitulatif",
+      "subtitle": "Se remplit au fil de la conversation — vous n'avez rien à saisir.",
+      "destination": "Destination",
+      "dates": "Dates",
+      "datesFlexible": "{n} jours (flexibles)",
+      "travelers": "Voyageurs",
+      "travelersValue": "{n} pers.",
+      "travelersWithChildren": "{n} pers. (dont {children, plural, one {# enfant} other {# enfants}})",
+      "budgetMax": "Budget max",
+      "type": "Type",
+      "activities": "Activités",
+      "constraints": "Contraintes",
+      "toSpecify": "à préciser",
+      "name": "Nom complet *",
+      "email": "Email *",
+      "dictatedPlaceholder": "Dicté par l'assistant…",
+      "consentNote": "À cocher vous-même — l'assistant ne peut pas le faire à votre place",
+      "gdpr": "J'accepte que mes données soient utilisées pour me proposer des voyages adaptés (RGPD).",
+      "terms": "J'accepte les <cgu>CGU</cgu>.",
+      "cgu": "CGU",
+      "missingInfo": "{n, plural, one {Il manque encore # information} other {Il manque encore # informations}} — dites-le à l'assistant, il s'en occupe.",
+      "checkBothBoxes": "Cochez les deux cases pour continuer.",
+      "readyBadge": "Prêt à voir vos voyages"
+    }
+  },
+  "Assistant": {
+    "title": "Votre assistant",
+    "bookingInProgress": "Réservation en cours",
+    "listening": "À l'écoute",
+    "micSilentWarning": "Je ne capte aucun son de votre micro. Vérifiez l'autorisation du navigateur, le micro sélectionné et le volume d'entrée — sinon l'assistant parle mais n'entend rien.",
+    "emptyStatePrompt": "Dites-moi où vous voulez partir — je remplis tout pour vous ✨",
+    "allReady": "Tout est prêt — cochez les 2 cases dans le récapitulatif pour voir vos voyages.",
+    "voiceTag": "vocal",
+    "savedFields": "Enregistré : {fields}",
+    "suggestionsFallback": "Voici les prochains départs disponibles, les plus proches de vos critères :",
+    "suggestionsMatched": "Voici les voyages qui correspondent le mieux à votre demande :",
+    "chosenTrip": "J'ai choisi : {title}",
+    "askContactInfo": "Parfait ! Il me faut votre nom et votre email pour finaliser la réservation — vous pouvez me les dire, ou les compléter directement ci-dessous.",
+    "readyToConfirm": "Parfait ! Vérifiez vos informations ci-dessous, puis confirmez pour passer au paiement de l'acompte.",
+    "genericError": "Une erreur est survenue. Vous pouvez continuer via le récapitulatif à droite.",
+    "thinking": "Je note tout ça…",
+    "quickSuggestions": [
+      "Un trek de 5 jours dans le désert, budget 700€",
+      "Combien coûte l'acompte ?",
+      "Il reste des places en Tunisie ?"
+    ],
+    "inputPlaceholder": "Décrivez votre voyage ou posez une question…",
+    "inputLabel": "Écrire à l'assistant",
+    "send": "Envoyer",
+    "stopMic": "Arrêter le micro",
+    "talkToAssistant": "Parler à l'assistant",
+    "voiceKeyMissing": "Clé Vapi absente — la saisie au clavier reste disponible.",
+    "voiceStartFailed": "Le démarrage a échoué : {cause}",
+    "voiceError": "Erreur Vapi : {cause}",
+    "voiceStartError": "La voix n'a pas pu démarrer : {cause}",
+    "footerNote": "L'assistant répond uniquement à partir des voyages réellement publiés, et ne coche jamais les cases RGPD et CGU à votre place.",
+    "fields": {
+      "destination": "destination",
+      "dateFlexible": "dates",
+      "exactStartDate": "date de départ",
+      "exactEndDate": "date de retour",
+      "desiredDurationDays": "durée",
+      "travelerCount": "voyageurs",
+      "adults": "adultes",
+      "children": "enfants",
+      "budgetMax": "budget",
+      "tripTypes": "type de voyage",
+      "style": "style",
+      "accommodation": "hébergement",
+      "transportIncluded": "transport",
+      "activities": "activités",
+      "constraints": "contraintes",
+      "language": "langue",
+      "name": "nom",
+      "email": "email",
+      "phone": "téléphone",
+      "country": "pays"
+    }
+  },
+  "TripSuggestion": {
+    "byAgency": "Par {name}",
+    "depositIncluded": "dont {amount} d'acompte",
+    "soldOut": "Complet",
+    "seatsLeft": "{n, plural, one {# place restante} other {# places restantes}}",
+    "select": "Choisir ce voyage"
+  },
+  "BookingSummary": {
+    "name": "Nom complet *",
+    "email": "Email *",
+    "phone": "Téléphone",
+    "travelers": "Voyageurs",
+    "depositOnline": "Acompte à régler en ligne ({n, plural, one {# place} other {# places}})",
+    "balanceOnSite": "Solde à régler sur place",
+    "gdpr": "J'accepte que mes données soient utilisées pour cette réservation (RGPD).",
+    "terms": "J'accepte les <cgu>CGU</cgu>.",
+    "cgu": "CGU",
+    "notEnoughSeats": "Plus assez de places disponibles pour ce nombre de voyageurs.",
+    "genericError": "La réservation n'a pas pu être créée. Réessayez.",
+    "networkError": "Une erreur réseau est survenue. Réessayez.",
+    "confirm": "Confirmer et payer l'acompte"
+  },
+  "Results": {
+    "back": "Retour",
+    "badgeFallback": "Prochains départs disponibles",
+    "badgeMatched": "Sélection personnalisée",
+    "titleFallback": "Voici les prochains voyages disponibles",
+    "titleMatched": "Voici nos recommandations pour vous",
+    "subtitleFallback": "Nous n'avons pas trouvé de correspondance exacte à vos critères — voici les départs les plus proches, basés sur la disponibilité actuelle.",
+    "subtitleMatched": "Classées selon ce que vous nous avez dit. Chaque voyage explique pourquoi il vous correspond.",
+    "topPick": "Notre meilleure recommandation",
+    "matchLabel": "de correspondance",
+    "matchRate": "Taux de correspondance",
+    "whyMatches": "Pourquoi ce voyage vous correspond",
+    "goodToKnow": "À savoir",
+    "seeThisTrip": "Voir ce voyage",
+    "whyThisTrip": "Pourquoi ce voyage",
+    "interested": "Ces voyages vous intéressent ?",
+    "seeAllTrips": "Voir tous les voyages disponibles",
+    "noSearch": {
+      "title": "Aucune recherche en cours",
+      "subtitle": "Remplissez le formulaire pour recevoir des suggestions de voyages.",
+      "cta": "Trouver mon voyage"
+    }
+  },
+  "AiMatch": {
+    "destination": "Destination : {destination}",
+    "destinationNotMet": "Autre destination que celle demandée",
+    "datesNear": "Départ proche de vos dates",
+    "datesFar": "Dates éloignées de votre demande",
+    "datesFlexible": "Vos dates sont flexibles",
+    "budgetMet": "Dans votre budget",
+    "budgetNotMet": "Au-dessus de votre budget",
+    "typeMet": "Type recherché : {type}",
+    "typeNotMet": "Autre type de voyage",
+    "matchesInterests": "Correspond à vos envies : {tags}",
+    "fewSeats": "{n, plural, one {Plus qu'une place} other {Plus que # places}}",
+    "warningOverBudget": "{amount} au-dessus du budget indiqué",
+    "warningWrongType": "Type {type}, pas celui demandé",
+    "warningDuration": "{days} jours au lieu des {wanted} souhaités"
+  },
+  "AgencyPage": {
+    "verifiedAgency": "Agence vérifiée",
+    "descriptionFallback": "Voyages en groupe organisés par {name}, agence vérifiée sur MaghrebVoyage.",
+    "publishedTrips": "Voyages publiés",
+    "noTrips": "Cette agence n'a aucun voyage disponible pour le moment."
+  },
+  "TripDetail": {
+    "back": "Retour",
+    "days": "{n} jours",
+    "physicalLevel": [
+      "",
+      "Facile",
+      "Modéré",
+      "Actif",
+      "Difficile",
+      "Extrême"
+    ],
+    "guarantees": [
+      "Annulation par lien, sans compte",
+      "Support 7j/7",
+      "Confirmation immédiate"
+    ],
+    "facts": {
+      "type": "Type",
+      "level": "Niveau",
+      "groupSize": "Taille du groupe",
+      "groupSizeValue": "Jusqu'à {n} personnes",
+      "meetingPoint": "Point de rendez-vous"
+    },
+    "about": "À propos de ce voyage",
+    "gallery": "En images",
+    "included": "Inclus",
+    "notIncluded": "Non inclus",
+    "program": "Programme",
+    "perPerson": "par personne",
+    "depositNow": "Acompte à payer maintenant",
+    "balanceOnSite": "Reste à régler sur place",
+    "soldOut": "Complet",
+    "bookNow": "Réserver maintenant",
+    "securePayment": "Paiement sécurisé par Stripe",
+    "soldOutNote": "Ce voyage est complet. Consultez d'autres départs sur la marketplace.",
+    "seeAllTrips": "Voir tous ses voyages",
+    "otherTripsFrom": "Autres voyages de {name}"
+  },
+  "StatusBadge": {
+    "trip": {
+      "DRAFT": "Brouillon",
+      "PUBLISHED": "Publié",
+      "FULL": "Complet",
+      "CLOSED": "Clôturé",
+      "CANCELLED": "Annulé"
+    },
+    "agency": {
+      "PENDING": "En attente",
+      "UNDER_REVIEW": "En cours d'examen",
+      "VERIFIED": "Vérifiée",
+      "REJECTED": "Rejetée",
+      "SUSPENDED": "Suspendue"
+    }
+  },
+  "VoyagesPage": {
+    "title": "Tous les voyages",
+    "description": "Parcourez tous les voyages en groupe publiés par des agences vérifiées au Maroc, en Tunisie et en Algérie. Filtrez par destination, budget et dates.",
+    "heading": "Tous les voyages",
+    "subtitle": "Voyages en groupe publiés par des agences vérifiées au Maroc, en Tunisie et en Algérie."
+  },
+  "Marketplace": {
+    "sortBy": "Trier par",
+    "sortDateAsc": "Date de départ",
+    "sortPriceAsc": "Prix croissant",
+    "sortPriceDesc": "Prix décroissant",
+    "sortSeatsAsc": "Places restantes",
+    "results": "{n, plural, one {# voyage disponible} other {# voyages disponibles}}",
+    "noResults": "Aucun voyage ne correspond à ces critères. Essayez d'élargir votre budget ou vos dates."
+  },
+  "TripFilters": {
+    "filters": "Filtres",
+    "destination": "Destination",
+    "allDestinations": "Toutes destinations",
+    "departureMonth": "Mois de départ",
+    "allMonths": "Tous les mois",
+    "budget": "Budget",
+    "budgetMax": "Budget max",
+    "upTo": "Jusqu'à {amount}",
+    "reset": "Réinitialiser",
+    "tripType": "Type de voyage",
+    "clear": "Effacer"
+  },
+  "SeatsGauge": {
+    "soldOut": "Complet",
+    "remaining": "{n, plural, one {# place restante} other {# places restantes}} sur {total}"
+  },
+  "TripCard": {
+    "days": "{n} jours",
+    "byAgency": "Par {name}",
+    "depositIncluded": "dont {amount} d'acompte",
+    "soldOut": "Complet",
+    "highlightTop": "Recommandé",
+    "highlightGood": "Parfait pour vous",
+    "highlightFallback": "Bonne option"
+  },
+  "TripType": {
+    "CULTURAL": "Culturel",
+    "DESERT": "Désert",
+    "BEACH": "Plage",
+    "ADVENTURE": "Aventure",
+    "PILGRIMAGE": "Pèlerinage",
+    "CITY_BREAK": "Escapade urbaine",
+    "TREKKING": "Trekking",
+    "GASTRONOMY": "Gastronomie"
+  },
+  "Nav": {
+    "voyages": "Voyages",
+    "findTrip": "Trouver mon voyage",
+    "howItWorks": "Comment ça marche",
+    "becomeAgency": "Devenir agence",
+    "login": "Se connecter",
+    "menu": "Menu",
+    "brand": "MaghrebVoyage"
+  },
+  "Footer": {
+    "tagline": "La marketplace des voyages en petit groupe organisés par des agences vérifiées au Maroc, en Tunisie et en Algérie — pensée pour la diaspora.",
+    "travelHeading": "Voyager",
+    "allDestinations": "Toutes les destinations",
+    "findTripAi": "Trouver mon voyage (IA)",
+    "publishAsAgency": "Publier en tant qu'agence",
+    "legalHeading": "Légal",
+    "legal": {
+      "cgu": "CGU",
+      "confidentialite": "Confidentialité",
+      "remboursements": "Remboursements",
+      "mentions": "Mentions légales"
+    },
+    "copyright": "© {year} MaghrebVoyage. Tous droits réservés."
+  },
+  "Home": {
+    "hero": {
+      "title1": "Découvrez le Maghreb",
+      "titleHighlight": "Autrement",
+      "subtitle": "Des expériences authentiques, des agences locales et des voyages inoubliables.",
+      "searchLabel": "Où souhaitez-vous aller ?",
+      "searchPlaceholder": "Où souhaitez-vous aller ?",
+      "searchButton": "Lancer ma recherche IA"
+    },
+    "trust": [
+      "Agences vérifiées",
+      "Paiement sécurisé",
+      "Support 7j/7"
+    ],
+    "destinations": {
+      "heading": "Destinations populaires",
+      "seeAll": "Voir toutes",
+      "priceFrom": "À partir de {price}",
+      "comingSoon": "Bientôt disponible",
+      "countries": {
+        "Maroc": "Maroc",
+        "Algérie": "Algérie",
+        "Tunisie": "Tunisie"
+      }
+    },
+    "stats": [
+      {
+        "value": "3",
+        "label": "Pays couverts"
+      },
+      {
+        "value": "100%",
+        "label": "Agences vérifiées"
+      },
+      {
+        "value": "Stripe",
+        "label": "Paiement sécurisé"
+      },
+      {
+        "value": "7j/7",
+        "label": "Support réactif"
+      }
+    ],
+    "howItWorks": {
+      "heading": "Comment ça marche",
+      "subtitle": "Trois étapes entre l'envie de partir et la place réservée.",
+      "step": "Étape {n}",
+      "steps": [
+        {
+          "title": "Décrivez",
+          "detail": "Dites-nous où vous voulez aller, quand, et avec quel budget. Cinq étapes rapides, deux minutes montre en main."
+        },
+        {
+          "title": "L'IA trouve",
+          "detail": "Notre assistant croise votre demande avec les voyages réellement disponibles et vous propose 1 à 3 correspondances."
+        },
+        {
+          "title": "Réservez",
+          "detail": "Bloquez votre place avec un acompte sécurisé par carte. Le solde se règle directement avec l'agence, sur place."
+        }
+      ]
+    },
+    "trustSection": {
+      "heading": "Réservez en confiance",
+      "badges": [
+        {
+          "title": "Agences vérifiées",
+          "detail": "Chaque agence soumet un registre de commerce examiné par notre équipe avant de pouvoir publier un seul voyage."
+        },
+        {
+          "title": "Paiement sécurisé Stripe",
+          "detail": "Vous ne payez qu'un acompte en ligne, sur la page hébergée par Stripe. Aucune donnée de carte ne transite par nous."
+        },
+        {
+          "title": "Support réactif",
+          "detail": "Une question, une annulation, un imprévu : notre équipe répond et fait le lien avec l'agence organisatrice."
+        }
+      ]
+    },
+    "testimonials": {
+      "heading": "Ce qu'en disent nos voyageurs",
+      "items": [
+        {
+          "quote": "Réserver notre trek dans l'Atlas depuis Paris a pris cinq minutes. L'agence nous a contactés le jour même.",
+          "name": "Yasmine K.",
+          "location": "France"
+        },
+        {
+          "quote": "Le formulaire IA nous a proposé exactement ce qu'on cherchait pour un voyage en famille à Djerba, budget compris.",
+          "name": "Omar T.",
+          "location": "Canada"
+        },
+        {
+          "quote": "Rassurant de voir que l'agence est vérifiée avant de payer l'acompte en ligne.",
+          "name": "Leïla B.",
+          "location": "Belgique"
+        }
+      ]
+    },
+    "faq": {
+      "heading": "Questions fréquentes",
+      "items": [
+        {
+          "q": "Comment fonctionne l'acompte ?",
+          "a": "Vous payez uniquement un acompte en ligne au moment de la réservation (au minimum 10% du prix total). Le solde se règle directement auprès de l'agence, sur place ou avant le départ selon ses conditions."
+        },
+        {
+          "q": "Puis-je annuler ma réservation ?",
+          "a": "Oui. Chaque email de confirmation contient un lien d'annulation personnel — aucun compte n'est nécessaire. Le remboursement de l'acompte est ensuite traité manuellement par notre équipe."
+        },
+        {
+          "q": "Comment les agences sont-elles vérifiées ?",
+          "a": "Chaque agence soumet un dossier (registre de commerce, zones d'activité) examiné par notre équipe sous 48h avant de pouvoir publier le moindre voyage."
+        },
+        {
+          "q": "Le formulaire IA crée-t-il une offre sur mesure ?",
+          "a": "Non. Il recommande des voyages déjà publiés par nos agences qui correspondent à vos critères — dates, budget, type de voyage. Vous réservez une place sur un départ existant."
+        },
+        {
+          "q": "Que se passe-t-il si l'agence annule le voyage ?",
+          "a": "Vous êtes prévenu par email immédiatement et l'intégralité de votre acompte vous est remboursée dans les meilleurs délais."
+        },
+        {
+          "q": "Dois-je créer un compte pour réserver ?",
+          "a": "Non. La réservation se fait avec votre nom, votre email et votre téléphone. Seules les agences ont besoin d'un compte sur la plateforme."
+        }
+      ]
+    },
+    "cta": {
+      "heading": "Prêt à préparer votre prochain voyage ?",
+      "subtitle": "Trouvez le voyage qui vous correspond en moins de deux minutes, ou parcourez la marketplace directement.",
+      "findTrip": "Trouver mon voyage",
+      "seeAll": "Voir tous les voyages"
+    }
+  },
+  "Auth": {
+    "loginTitle": "Se connecter",
+    "loginSubtitle": "Accédez à votre compte pour réserver et suivre vos voyages.",
+    "registerTitle": "Créer un compte",
+    "registerSubtitle": "Un compte est nécessaire pour utiliser l'assistant IA et réserver un voyage.",
+    "tabPassword": "Mot de passe",
+    "tabMagicLink": "Lien magique",
+    "nameLabel": "Nom complet",
+    "emailLabel": "Email",
+    "passwordLabel": "Mot de passe",
+    "confirmPasswordLabel": "Confirmer le mot de passe",
+    "submitLogin": "Se connecter",
+    "submitRegister": "Créer mon compte",
+    "submitMagicLink": "Recevoir le lien de connexion",
+    "magicLinkHint": "Pas de mot de passe : recevez un lien de connexion par email.",
+    "magicLinkSentTitle": "Vérifiez votre boîte mail",
+    "magicLinkSentBody": "Un lien de connexion a été envoyé à {email}. Il est valable 24 heures.",
+    "backToOptions": "Retour",
+    "errorInvalidCredentials": "Identifiants invalides. Vérifiez votre email et votre mot de passe.",
+    "errorGeneric": "Une erreur est survenue. Réessayez.",
+    "errorRequiredCredentials": "Email et mot de passe requis.",
+    "errorRequiredEmail": "Email requis.",
+    "errorPasswordMismatch": "Les mots de passe ne correspondent pas.",
+    "errorPasswordTooShort": "8 caractères minimum.",
+    "errorNameTooShort": "Nom trop court.",
+    "noAccount": "Pas encore de compte ?",
+    "createAccount": "Créer un compte",
+    "haveAccount": "Déjà un compte ?",
+    "signIn": "Se connecter",
+    "gdprConsent": "J'accepte le traitement de mes données personnelles conformément à la <link>politique de confidentialité</link>.",
+    "termsConsent": "J'accepte les <link>CGU</link>.",
+    "gateNotice": "Créez un compte ou connectez-vous pour continuer."
+  }
+}

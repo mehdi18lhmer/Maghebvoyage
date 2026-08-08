@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,10 +13,10 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { formatPrice, tripTypeLabel } from "@/lib/format";
+import { formatPrice } from "@/lib/format";
 import type { TripType } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { STEP_TITLES, type AiFormStateApi } from "@/components/ai/use-ai-form-state";
+import type { AiFormStateApi } from "@/components/ai/use-ai-form-state";
 
 /**
  * Purely presentational now — all state lives in useAiFormState(), called once
@@ -25,13 +26,6 @@ import { STEP_TITLES, type AiFormStateApi } from "@/components/ai/use-ai-form-st
 
 const BUDGET_MIN = 200;
 const BUDGET_MAX = 3000;
-/** Quick-set presets shown as tier buttons, per the reference sheet's step 2. */
-const BUDGET_TIERS = [
-  { label: "Économique", value: 400 },
-  { label: "Moyen", value: 800 },
-  { label: "Confort", value: 1500 },
-  { label: "Premium", value: 2500 },
-];
 
 const TYPES: TripType[] = [
   "DESERT",
@@ -46,6 +40,18 @@ const TYPES: TripType[] = [
 
 export function AiRequestForm(api: AiFormStateApi) {
   const { step, form, error, analyzing, update, toggleType, goNext, goBack, handleSubmit } = api;
+  const locale = useLocale();
+  const t = useTranslations("AiPlanner");
+  const tType = useTranslations("TripType");
+
+  const stepTitles = t.raw("steps") as string[];
+  /** Quick-set presets shown as tier buttons, per the reference sheet's step 2. */
+  const BUDGET_TIERS = [
+    { label: t("step2.tiers.economy"), value: 400 },
+    { label: t("step2.tiers.medium"), value: 800 },
+    { label: t("step2.tiers.comfort"), value: 1500 },
+    { label: t("step2.tiers.premium"), value: 2500 },
+  ];
 
   if (analyzing) {
     return (
@@ -53,10 +59,8 @@ export function AiRequestForm(api: AiFormStateApi) {
         <span className="flex size-16 items-center justify-center rounded-full bg-accent">
           <Sparkles className="size-7 animate-pulse text-primary" />
         </span>
-        <h2 className="font-heading text-lg font-bold">Analyse de votre demande…</h2>
-        <p className="text-sm text-muted-foreground">
-          Nous cherchons les voyages qui correspondent le mieux à vos critères.
-        </p>
+        <h2 className="font-heading text-lg font-bold">{t("analyzing.title")}</h2>
+        <p className="text-sm text-muted-foreground">{t("analyzing.subtitle")}</p>
         <Loader2 className="size-5 animate-spin text-muted-foreground" />
       </Card>
     );
@@ -66,8 +70,8 @@ export function AiRequestForm(api: AiFormStateApi) {
     <Card className="gap-0 p-6 sm:p-8">
       <div className="space-y-2.5">
         <div className="flex items-center justify-between text-sm">
-          <span className="font-heading text-base font-bold">{STEP_TITLES[step - 1]}</span>
-          <span className="font-medium text-muted-foreground">Étape {step} sur 5</span>
+          <span className="font-heading text-base font-bold">{stepTitles[step - 1]}</span>
+          <span className="font-medium text-muted-foreground">{t("stepOf", { step })}</span>
         </div>
         <Progress value={(step / 5) * 100} />
       </div>
@@ -75,16 +79,16 @@ export function AiRequestForm(api: AiFormStateApi) {
       {step === 1 && (
         <div className="mt-6 space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="destination">Destination souhaitée *</Label>
+            <Label htmlFor="destination">{t("step1.destination")}</Label>
             <Input
               id="destination"
-              placeholder="Maroc, Tunisie, Sahara, Marrakech..."
+              placeholder={t("step1.destinationPlaceholder")}
               value={form.destination}
               onChange={(e) => update("destination", e.target.value)}
             />
           </div>
           <div className="space-y-2">
-            <Label>Flexibilité des dates *</Label>
+            <Label>{t("step1.dateFlexibility")}</Label>
             <RadioGroup
               value={form.dateFlexible ? "flexible" : "exact"}
               onValueChange={(v) => update("dateFlexible", v === "flexible")}
@@ -96,7 +100,7 @@ export function AiRequestForm(api: AiFormStateApi) {
                   form.dateFlexible && "border-primary bg-accent"
                 )}
               >
-                <RadioGroupItem value="flexible" /> Dates flexibles
+                <RadioGroupItem value="flexible" /> {t("step1.datesFlexible")}
               </Label>
               <Label
                 className={cn(
@@ -104,13 +108,13 @@ export function AiRequestForm(api: AiFormStateApi) {
                   !form.dateFlexible && "border-primary bg-accent"
                 )}
               >
-                <RadioGroupItem value="exact" /> Dates précises
+                <RadioGroupItem value="exact" /> {t("step1.datesExact")}
               </Label>
             </RadioGroup>
           </div>
           {form.dateFlexible ? (
             <div className="space-y-1.5">
-              <Label htmlFor="duration">Durée souhaitée (jours) *</Label>
+              <Label htmlFor="duration">{t("step1.duration")}</Label>
               <Input
                 id="duration"
                 type="number"
@@ -122,7 +126,7 @@ export function AiRequestForm(api: AiFormStateApi) {
           ) : (
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="start">Date de départ *</Label>
+                <Label htmlFor="start">{t("step1.startDate")}</Label>
                 <Input
                   id="start"
                   type="date"
@@ -131,7 +135,7 @@ export function AiRequestForm(api: AiFormStateApi) {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="end">Date de retour *</Label>
+                <Label htmlFor="end">{t("step1.endDate")}</Label>
                 <Input
                   id="end"
                   type="date"
@@ -148,7 +152,7 @@ export function AiRequestForm(api: AiFormStateApi) {
         <div className="mt-6 space-y-4">
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="travelers">Voyageurs *</Label>
+              <Label htmlFor="travelers">{t("step2.travelers")}</Label>
               <Input
                 id="travelers"
                 type="number"
@@ -158,7 +162,7 @@ export function AiRequestForm(api: AiFormStateApi) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="adults">Adultes *</Label>
+              <Label htmlFor="adults">{t("step2.adults")}</Label>
               <Input
                 id="adults"
                 type="number"
@@ -168,7 +172,7 @@ export function AiRequestForm(api: AiFormStateApi) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="children">Enfants</Label>
+              <Label htmlFor="children">{t("step2.children")}</Label>
               <Input
                 id="children"
                 type="number"
@@ -179,9 +183,9 @@ export function AiRequestForm(api: AiFormStateApi) {
             </div>
           </div>
           <div className="space-y-3 rounded-xl border bg-secondary/40 p-4">
-            <Label>Budget maximum par personne *</Label>
+            <Label>{t("step2.budgetMax")}</Label>
             <p className="text-center font-heading text-3xl font-extrabold tabular-nums">
-              {formatPrice(form.budgetMax)}
+              {formatPrice(form.budgetMax, locale)}
             </p>
             <Slider
               value={[form.budgetMax]}
@@ -191,8 +195,8 @@ export function AiRequestForm(api: AiFormStateApi) {
               onValueChange={([v]) => update("budgetMax", v)}
             />
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{formatPrice(BUDGET_MIN)}</span>
-              <span>{formatPrice(BUDGET_MAX)}</span>
+              <span>{formatPrice(BUDGET_MIN, locale)}</span>
+              <span>{formatPrice(BUDGET_MAX, locale)}</span>
             </div>
             <div className="grid grid-cols-4 gap-2 pt-1">
               {BUDGET_TIERS.map(({ label, value }) => (
@@ -218,7 +222,7 @@ export function AiRequestForm(api: AiFormStateApi) {
       {step === 3 && (
         <div className="mt-6 space-y-4">
           <div className="space-y-2">
-            <Label>Types de voyage *</Label>
+            <Label>{t("step3.tripTypes")}</Label>
             <div className="flex flex-wrap gap-2">
               {TYPES.map((type) => (
                 <button key={type} type="button" onClick={() => toggleType(type)}>
@@ -229,7 +233,7 @@ export function AiRequestForm(api: AiFormStateApi) {
                       !form.tripTypes.includes(type) && "text-muted-foreground"
                     )}
                   >
-                    {tripTypeLabel(type)}
+                    {tType(type)}
                   </Badge>
                 </button>
               ))}
@@ -237,19 +241,19 @@ export function AiRequestForm(api: AiFormStateApi) {
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label htmlFor="style">Style de voyage</Label>
+              <Label htmlFor="style">{t("step3.style")}</Label>
               <Input
                 id="style"
-                placeholder="Aventure, détente, immersion..."
+                placeholder={t("step3.stylePlaceholder")}
                 value={form.style}
                 onChange={(e) => update("style", e.target.value)}
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="accommodation">Hébergement préféré</Label>
+              <Label htmlFor="accommodation">{t("step3.accommodation")}</Label>
               <Input
                 id="accommodation"
-                placeholder="Riad, hôtel, bivouac..."
+                placeholder={t("step3.accommodationPlaceholder")}
                 value={form.accommodation}
                 onChange={(e) => update("accommodation", e.target.value)}
               />
@@ -257,7 +261,7 @@ export function AiRequestForm(api: AiFormStateApi) {
           </div>
           <div className="flex items-center justify-between rounded-lg border p-3">
             <Label htmlFor="transport" className="font-normal">
-              Transport inclus souhaité
+              {t("step3.transport")}
             </Label>
             <Switch
               id="transport"
@@ -271,29 +275,29 @@ export function AiRequestForm(api: AiFormStateApi) {
       {step === 4 && (
         <div className="mt-6 space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="activities">Activités préférées</Label>
+            <Label htmlFor="activities">{t("step4.activities")}</Label>
             <Input
               id="activities"
-              placeholder="désert, randonnée, plage, gastronomie..."
+              placeholder={t("step4.activitiesPlaceholder")}
               value={form.activities}
               onChange={(e) => update("activities", e.target.value)}
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="constraints">Contraintes particulières</Label>
+            <Label htmlFor="constraints">{t("step4.constraints")}</Label>
             <Textarea
               id="constraints"
               rows={3}
-              placeholder="Mobilité réduite, régime alimentaire, voyage en famille..."
+              placeholder={t("step4.constraintsPlaceholder")}
               value={form.constraints}
               onChange={(e) => update("constraints", e.target.value)}
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="language">Langue préférée du guide</Label>
+            <Label htmlFor="language">{t("step4.language")}</Label>
             <Input
               id="language"
-              placeholder="Français, anglais, arabe..."
+              placeholder={t("step4.languagePlaceholder")}
               value={form.language}
               onChange={(e) => update("language", e.target.value)}
             />
@@ -305,11 +309,11 @@ export function AiRequestForm(api: AiFormStateApi) {
         <div className="mt-6 space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label htmlFor="name">Nom complet *</Label>
+              <Label htmlFor="name">{t("step5.name")}</Label>
               <Input id="name" value={form.name} onChange={(e) => update("name", e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email *</Label>
+              <Label htmlFor="email">{t("step5.email")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -318,11 +322,11 @@ export function AiRequestForm(api: AiFormStateApi) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="phone">Téléphone</Label>
+              <Label htmlFor="phone">{t("step5.phone")}</Label>
               <Input id="phone" value={form.phone} onChange={(e) => update("phone", e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="country">Pays de résidence</Label>
+              <Label htmlFor="country">{t("step5.country")}</Label>
               <Input id="country" value={form.country} onChange={(e) => update("country", e.target.value)} />
             </div>
           </div>
@@ -334,7 +338,7 @@ export function AiRequestForm(api: AiFormStateApi) {
                 onCheckedChange={(v) => update("gdprConsent", v === true)}
               />
               <Label htmlFor="gdpr" className="font-normal leading-snug">
-                J&apos;accepte que mes données soient utilisées pour me proposer des voyages adaptés (RGPD).
+                {t("step5.gdpr")}
               </Label>
             </div>
             <div className="flex items-start gap-2">
@@ -344,11 +348,13 @@ export function AiRequestForm(api: AiFormStateApi) {
                 onCheckedChange={(v) => update("termsAccepted", v === true)}
               />
               <Label htmlFor="terms" className="font-normal leading-snug">
-                J&apos;accepte les{" "}
-                <a href="/legal/cgu" target="_blank" className="underline">
-                  CGU
-                </a>
-                .
+                {t.rich("step5.terms", {
+                  cgu: (chunks) => (
+                    <a href="/legal/cgu" target="_blank" className="underline">
+                      {chunks}
+                    </a>
+                  ),
+                })}
               </Label>
             </div>
           </div>
@@ -359,15 +365,15 @@ export function AiRequestForm(api: AiFormStateApi) {
 
       <div className="mt-6 flex justify-between gap-3 border-t pt-5">
         <Button type="button" variant="outline" onClick={goBack} disabled={step === 1}>
-          Retour
+          {t("back")}
         </Button>
         {step < 5 ? (
           <Button type="button" onClick={goNext}>
-            Continuer
+            {t("continue")}
           </Button>
         ) : (
           <Button type="button" onClick={handleSubmit}>
-            Voir mes suggestions
+            {t("seeMySuggestions")}
           </Button>
         )}
       </div>

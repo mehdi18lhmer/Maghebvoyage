@@ -126,7 +126,6 @@ export async function sendBookingConfirmed(bookingId: string): Promise<void> {
     agencyName: booking.agency.name,
     agencyEmail: booking.agency.contactEmail,
     agencyPhone: booking.agency.contactPhone,
-    cancellationToken: booking.cancellationToken,
   });
 
   // Sent in parallel and independently: the agency failing to receive E3 must
@@ -167,7 +166,6 @@ export interface BookingConfirmationInput {
   agencyName: string;
   agencyEmail: string;
   agencyPhone: string;
-  cancellationToken: string;
 }
 
 /**
@@ -175,12 +173,16 @@ export interface BookingConfirmationInput {
  * §I lists the mandatory contents: the code shown large, trip title/destination/
  * dates, agency contact, deposit paid + balance due on site, meeting point when
  * set, the cancellation link, and legal links in the footer.
+ *
+ * Cancellation is now account-based (no more standalone token link) — the
+ * email instead points at the client's account dashboard, where they log in
+ * to view and cancel bookings.
  */
 export function renderBookingConfirmation(i: BookingConfirmationInput): {
   subject: string;
   html: string;
 } {
-  const cancelUrl = `${APP_URL}/booking/cancel?token=${encodeURIComponent(i.cancellationToken)}`;
+  const accountUrl = `${APP_URL}/account/bookings`;
 
   return {
     subject: `Réservation confirmée — ${i.tripTitle}`,
@@ -208,9 +210,54 @@ export function renderBookingConfirmation(i: BookingConfirmationInput): {
         <p style="margin:0;font-size:14px;color:#6b7280">${i.agencyName}<br>${i.agencyEmail} · ${i.agencyPhone}</p>
       </div>
 
-      <a href="${cancelUrl}" style="display:inline-block;font-size:13px;color:#5b2bd0">Annuler ma réservation</a>
+      <a href="${accountUrl}" style="display:inline-block;font-size:13px;color:#5b2bd0">Gérer / annuler ma réservation</a>
     `),
   };
+}
+
+const MAGIC_LINK_TEXT: Record<string, { subject: string; heading: string; body: string; cta: string; ignore: string }> = {
+  fr: {
+    subject: "Votre lien de connexion — MaghrebVoyage",
+    heading: "Connexion à MaghrebVoyage",
+    body: "Cliquez sur le bouton ci-dessous pour vous connecter. Ce lien est valable 24 heures et ne peut être utilisé qu'une seule fois.",
+    cta: "Se connecter",
+    ignore: "Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email.",
+  },
+  en: {
+    subject: "Your sign-in link — MaghrebVoyage",
+    heading: "Sign in to MaghrebVoyage",
+    body: "Click the button below to sign in. This link is valid for 24 hours and can only be used once.",
+    cta: "Sign in",
+    ignore: "If you didn't request this, you can safely ignore this email.",
+  },
+  ar: {
+    subject: "رابط تسجيل الدخول الخاص بك — MaghrebVoyage",
+    heading: "تسجيل الدخول إلى MaghrebVoyage",
+    body: "انقر على الزر أدناه لتسجيل الدخول. هذا الرابط صالح لمدة 24 ساعة ويمكن استخدامه مرة واحدة فقط.",
+    cta: "تسجيل الدخول",
+    ignore: "إذا لم تطلب هذا الرابط، يمكنك تجاهل هذا البريد الإلكتروني بأمان.",
+  },
+};
+
+function magicLinkText(locale: string) {
+  return MAGIC_LINK_TEXT[locale] ?? MAGIC_LINK_TEXT.fr;
+}
+
+export function magicLinkEmailSubject(locale: string): string {
+  return magicLinkText(locale).subject;
+}
+
+export function magicLinkEmailHtml(url: string, locale: string): string {
+  const t = magicLinkText(locale);
+  const rtl = locale === "ar";
+  return layout(`
+    <div style="text-align:${rtl ? "right" : "left"};direction:${rtl ? "rtl" : "ltr"}">
+      <p style="margin:0 0 4px;font-size:15px;font-weight:700">${t.heading}</p>
+      <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#6b7280">${t.body}</p>
+      <a href="${url}" style="display:inline-block;background:#5b2bd0;color:#fff;font-weight:700;font-size:14px;padding:12px 24px;border-radius:10px;text-decoration:none;margin:0 0 20px">${t.cta}</a>
+      <p style="margin:0;font-size:12px;color:#9ca3af">${t.ignore}</p>
+    </div>
+  `);
 }
 
 /** E4 (agency) + E5 (admin) — fired right after §J.1's registration form is submitted. */

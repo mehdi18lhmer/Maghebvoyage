@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { isSoldOut, seatsRemaining } from "@/lib/format";
 
@@ -16,6 +17,7 @@ export function SeatsGauge({
   bookedSpots: number;
   className?: string;
 }) {
+  const t = useTranslations("SeatsGauge");
   const remaining = seatsRemaining(totalSpots, bookedSpots);
   const soldOut = isSoldOut(totalSpots, bookedSpots);
   const pct = Math.min((bookedSpots / totalSpots) * 100, 100);
@@ -29,14 +31,7 @@ export function SeatsGauge({
           soldOut ? "text-destructive" : nearlyFull ? "text-warning" : "text-success"
         )}
       >
-        {soldOut ? (
-          "Complet"
-        ) : (
-          <>
-            {remaining} place{remaining > 1 ? "s" : ""} restante{remaining > 1 ? "s" : ""}{" "}
-            <span className="font-normal text-muted-foreground">sur {totalSpots}</span>
-          </>
-        )}
+        {soldOut ? t("soldOut") : t("remaining", { n: remaining, total: totalSpots })}
       </p>
       <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
         <div

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { Loader2, ShieldCheck, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +37,8 @@ export function BookingSummaryCard({
 }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const locale = useLocale();
+  const t = useTranslations("BookingSummary");
 
   const seats = Math.max(1, Number(form.travelerCount) || 1);
   const remaining = seatsRemaining(trip.totalSpots, trip.bookedSpots);
@@ -67,7 +70,7 @@ export function BookingSummaryCard({
       });
       const data = (await res.json().catch(() => ({}))) as { checkoutUrl?: string; error?: string };
       if (!res.ok || !data.checkoutUrl) {
-        setError(data.error ?? "La réservation n'a pas pu être créée. Réessayez.");
+        setError(data.error ?? t("genericError"));
         setPending(false);
         return;
       }
@@ -75,7 +78,7 @@ export function BookingSummaryCard({
       // this redirect just hands the client to Stripe's own hosted page.
       window.location.href = data.checkoutUrl;
     } catch {
-      setError("Une erreur réseau est survenue. Réessayez.");
+      setError(t("networkError"));
       setPending(false);
     }
   }
@@ -85,7 +88,7 @@ export function BookingSummaryCard({
       <div>
         <p className="text-sm font-semibold">{trip.title}</p>
         <p className="text-xs text-muted-foreground">
-          {trip.destination} · {formatDateRange(trip.startDate, trip.endDate)}
+          {trip.destination} · {formatDateRange(trip.startDate, trip.endDate, locale)}
           {agencyName ? ` · ${agencyName}` : ""}
         </p>
       </div>
@@ -93,13 +96,13 @@ export function BookingSummaryCard({
       <div className="grid gap-2.5 sm:grid-cols-2">
         <div className="space-y-1">
           <Label htmlFor={`name-${trip.id}`} className="text-xs">
-            Nom complet *
+            {t("name")}
           </Label>
           <Input id={`name-${trip.id}`} value={form.name} onChange={(e) => update("name", e.target.value)} />
         </div>
         <div className="space-y-1">
           <Label htmlFor={`email-${trip.id}`} className="text-xs">
-            Email *
+            {t("email")}
           </Label>
           <Input
             id={`email-${trip.id}`}
@@ -110,13 +113,13 @@ export function BookingSummaryCard({
         </div>
         <div className="space-y-1">
           <Label htmlFor={`phone-${trip.id}`} className="text-xs">
-            Téléphone
+            {t("phone")}
           </Label>
           <Input id={`phone-${trip.id}`} value={form.phone} onChange={(e) => update("phone", e.target.value)} />
         </div>
         <div className="space-y-1">
           <Label htmlFor={`seats-${trip.id}`} className="text-xs">
-            Voyageurs
+            {t("travelers")}
           </Label>
           <Input
             id={`seats-${trip.id}`}
@@ -131,14 +134,12 @@ export function BookingSummaryCard({
 
       <div className="space-y-1.5 rounded-lg bg-secondary/50 p-2.5 text-xs">
         <div className="flex justify-between">
-          <span>
-            Acompte à régler en ligne ({seats} place{seats > 1 ? "s" : ""})
-          </span>
-          <span className="font-semibold">{formatPrice(depositTotal)}</span>
+          <span>{t("depositOnline", { n: seats })}</span>
+          <span className="font-semibold">{formatPrice(depositTotal, locale)}</span>
         </div>
         <div className="flex justify-between text-muted-foreground">
-          <span>Solde à régler sur place</span>
-          <span>{formatPrice(balanceTotal)}</span>
+          <span>{t("balanceOnSite")}</span>
+          <span>{formatPrice(balanceTotal, locale)}</span>
         </div>
       </div>
 
@@ -150,7 +151,7 @@ export function BookingSummaryCard({
             onCheckedChange={(v) => update("gdprConsent", v === true)}
           />
           <Label htmlFor={`gdpr-${trip.id}`} className="text-xs leading-snug font-normal">
-            J&apos;accepte que mes données soient utilisées pour cette réservation (RGPD).
+            {t("gdpr")}
           </Label>
         </div>
         <div className="flex items-start gap-2">
@@ -160,11 +161,13 @@ export function BookingSummaryCard({
             onCheckedChange={(v) => update("termsAccepted", v === true)}
           />
           <Label htmlFor={`terms-${trip.id}`} className="text-xs leading-snug font-normal">
-            J&apos;accepte les{" "}
-            <a href="/legal/cgu" target="_blank" className="underline">
-              CGU
-            </a>
-            .
+            {t.rich("terms", {
+              cgu: (chunks) => (
+                <a href="/legal/cgu" target="_blank" className="underline">
+                  {chunks}
+                </a>
+              ),
+            })}
           </Label>
         </div>
       </div>
@@ -172,7 +175,7 @@ export function BookingSummaryCard({
       {soldOut && (
         <p className="flex items-center gap-1.5 text-xs text-destructive">
           <TriangleAlert className="size-3.5 shrink-0" />
-          Plus assez de places disponibles pour ce nombre de voyageurs.
+          {t("notEnoughSeats")}
         </p>
       )}
       {error && (
@@ -184,7 +187,7 @@ export function BookingSummaryCard({
 
       <Button className="w-full" disabled={!canConfirm || pending} onClick={handleConfirm}>
         {pending ? <Loader2 className="size-4 animate-spin" /> : <ShieldCheck className="size-4" />}
-        Confirmer et payer l&apos;acompte
+        {t("confirm")}
       </Button>
     </div>
   );

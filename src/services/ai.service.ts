@@ -26,6 +26,23 @@ import type { GroupTrip } from "@/lib/types";
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const MODEL = "llama-3.3-70b-versatile";
 
+/**
+ * Appended to every system prompt below. Deliberately just a language
+ * switch, not a rewrite of the (carefully-tuned, French-authored) grounding
+ * and anti-hallucination rules above it — the model follows French meta-
+ * instructions perfectly well while extracting from, and replying in,
+ * English or Arabic; only the final reply's language needs to change.
+ */
+function languageDirective(locale: string): string {
+  if (locale === "en") {
+    return "\n\nIMPORTANT — LANGUAGE: reply to the traveller in English, regardless of what language these instructions are written in. Keep exact trip titles and catalogue facts unchanged.";
+  }
+  if (locale === "ar") {
+    return "\n\nمهم — اللغة: أجب المسافر بالعربية الفصحى، بغض النظر عن لغة هذه التعليمات. حافظ على عناوين الرحلات والمعلومات الواردة في السياق كما هي دون ترجمة.";
+  }
+  return "";
+}
+
 /** §C.3: "Si l'IA échoue ou met > 5s" — the structuring budget. */
 const STRUCTURE_TIMEOUT_MS = 5_000;
 const ANSWER_TIMEOUT_MS = 12_000;
@@ -239,7 +256,7 @@ STYLE :
  * markdown, shorter sentences, spoken numbers. Exported for the voice-context
  * route so typed and spoken answers stay governed by one set of rules.
  */
-export const VOICE_AGENT_RULES = `Tu es l'assistant vocal expert de MaghrebVoyage, plateforme de voyages en groupe au Maroc, en Tunisie et en Algérie. Tu es un conseiller voyage passionné du Maghreb.
+const VOICE_AGENT_RULES = `Tu es l'assistant vocal expert de MaghrebVoyage, plateforme de voyages en groupe au Maroc, en Tunisie et en Algérie. Tu es un conseiller voyage passionné du Maghreb.
 
 Tu réponds à TOUTES les questions liées au Maghreb et au voyage : villes, culture, gastronomie,
 restaurants, meilleures saisons, ambiance d'une région, idées d'itinéraires, budget sur place.
@@ -269,12 +286,34 @@ qu'elle peut consulter le récapitulatif à l'écran et voir ses voyages recomma
 IMPORTANT : ne demande JAMAIS son consentement RGPD ni son acceptation des CGU à voix haute — ce sont
 des cases à cocher que la personne doit cliquer elle-même dans l'application, jamais par la parole.`;
 
+/** Voice system prompt for a given locale — same rules, spoken in the right language. */
+export function voiceAgentPrompt(locale: string): string {
+  return VOICE_AGENT_RULES + languageDirective(locale);
+}
+
+const FALLBACK_ANSWER_TEXT: Record<string, { withTrip: (title: string, dest: string) => string; withoutTrip: string }> = {
+  fr: {
+    withTrip: (title, dest) =>
+      `Je ne peux pas répondre en détail pour le moment. En attendant, « ${title} » part de ${dest} — vous trouverez toutes les informations sur sa page.`,
+    withoutTrip: "Je ne peux pas répondre pour le moment. Parcourez les voyages disponibles pour trouver votre départ.",
+  },
+  en: {
+    withTrip: (title, dest) =>
+      `I can't answer in detail right now. In the meantime, "${title}" departs from ${dest} — you'll find all the details on its page.`,
+    withoutTrip: "I can't answer right now. Browse the available trips to find your departure.",
+  },
+  ar: {
+    withTrip: (title, dest) =>
+      `لا يمكنني الإجابة بالتفصيل الآن. في غضون ذلك، تنطلق رحلة "${title}" من ${dest} — ستجد كل المعلومات في صفحتها.`,
+    withoutTrip: "لا يمكنني الإجابة الآن. تصفح الرحلات المتاحة للعثور على رحلتك.",
+  },
+};
+
 /** Deterministic fallback when the LLM is unavailable — never a dead end (§C.3). */
-function fallbackAnswer(cited: GroupTrip[]): AssistantAnswer {
+function fallbackAnswer(cited: GroupTrip[], locale: string): AssistantAnswer {
   const first = cited[0];
-  const answer = first
-    ? `Je ne peux pas répondre en détail pour le moment. En attendant, « ${first.title} » part de ${first.destination} — vous trouverez toutes les informations sur sa page.`
-    : `Je ne peux pas répondre pour le moment. Parcourez les voyages disponibles pour trouver votre départ.`;
+  const text = FALLBACK_ANSWER_TEXT[locale] ?? FALLBACK_ANSWER_TEXT.fr;
+  const answer = first ? text.withTrip(first.title, first.destination) : text.withoutTrip;
   return {
     answer,
     cited: cited.map((t) => ({ title: t.title, slug: t.slug })),
@@ -288,14 +327,15 @@ function fallbackAnswer(cited: GroupTrip[]): AssistantAnswer {
  */
 export async function answerTripQuestion(
   question: string,
-  history: ChatMessage[] = []
+  history: ChatMessage[] = [],
+  locale = "fr"
 ): Promise<AssistantAnswer> {
   const trimmed = question.trim().slice(0, 2000);
   const { context, cited } = await buildGroundingContext(trimmed);
 
   const raw = await callGroq(
     [
-      { role: "system", content: ASSISTANT_SYSTEM },
+      { role: "system", content: ASSISTANT_SYSTEM + languageDirective(locale) },
       // Keep the last few turns so follow-ups like "et le suivant ?" work.
       ...history.slice(-12),
       { role: "user", content: `CONTEXTE :\n${context}\n\nQUESTION : ${trimmed}` },
@@ -303,7 +343,7 @@ export async function answerTripQuestion(
     { timeoutMs: ANSWER_TIMEOUT_MS }
   );
 
-  if (!raw?.trim()) return fallbackAnswer(cited);
+  if (!raw?.trim()) return fallbackAnswer(cited, locale);
 
   return {
     answer: raw.trim(),
@@ -386,7 +426,7 @@ const FIELD_QUESTIONS: Record<string, string> = {
   email: "son email",
 };
 
-function converseSystemPrompt(missing: string[]): string {
+function converseSystemPrompt(missing: string[], locale: string): string {
   const nextAsk = missing[0] ? FIELD_QUESTIONS[missing[0]] : null;
 
   return `Tu es l'assistant IA de MaghrebVoyage. Tu aides un voyageur à remplir sa demande de voyage EN PARLANT, sans qu'il touche le formulaire.
@@ -437,7 +477,11 @@ ${nextAsk ? `5. Il manque encore une information : ${nextAsk}. Pose UNE SEULE qu
    Mets "readyToSubmit" à true.`}
 
 Réponds UNIQUEMENT en JSON strict, sans texte autour :
-{ "reply": string, "slots": { ... }, "readyToSubmit": boolean }`;
+{ "reply": string, "slots": { ... }, "readyToSubmit": boolean }
+
+Le champ "reply" doit être écrit dans la langue demandée ci-dessous ; "slots" reste toujours dans le
+même format technique (dates AAAA-MM-JJ, valeurs d'enum en anglais comme DESERT/TREKKING) quelle que
+soit la langue de la conversation.${languageDirective(locale)}`;
 }
 
 /**
@@ -447,18 +491,24 @@ Réponds UNIQUEMENT en JSON strict, sans texte autour :
  * to throw: on any failure this returns an empty, ungrounded turn rather than
  * blocking the conversation (§C.3's "never a dead end" applies here too).
  */
+const CONVERSE_FALLBACK_REPLY: Record<string, string> = {
+  fr: "Je n'ai pas pu traiter votre message pour le moment. Vous pouvez continuer à remplir le formulaire directement.",
+  en: "I couldn't process your message right now. You can keep filling in the form directly.",
+  ar: "تعذر معالجة رسالتك الآن. يمكنك متابعة تعبئة النموذج مباشرة.",
+};
+
 export async function converseForSlots(
   message: string,
   history: ChatMessage[],
-  currentForm: AiFormData
+  currentForm: AiFormData,
+  locale = "fr"
 ): Promise<ConverseResult> {
   const trimmed = message.trim().slice(0, 2000);
   const missing = missingRequiredFields(currentForm);
   const { context, cited } = await buildGroundingContext(trimmed);
 
   const fallback: ConverseResult = {
-    reply:
-      "Je n'ai pas pu traiter votre message pour le moment. Vous pouvez continuer à remplir le formulaire directement.",
+    reply: CONVERSE_FALLBACK_REPLY[locale] ?? CONVERSE_FALLBACK_REPLY.fr,
     slots: {},
     readyToSubmit: false,
     cited: [],
@@ -467,7 +517,7 @@ export async function converseForSlots(
 
   const raw = await callGroq(
     [
-      { role: "system", content: converseSystemPrompt(missing) },
+      { role: "system", content: converseSystemPrompt(missing, locale) },
       ...history.slice(-12),
       {
         role: "user",

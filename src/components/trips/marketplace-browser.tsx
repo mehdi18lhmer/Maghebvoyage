@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import {
   Select,
   SelectContent,
@@ -33,13 +34,14 @@ const SORTERS: Record<SortKey, (a: GroupTrip, b: GroupTrip) => number> = {
   "seats-asc": (a, b) => a.totalSpots - a.bookedSpots - (b.totalSpots - b.bookedSpots),
 };
 
-function monthOptions(trips: GroupTrip[]) {
+function monthOptions(trips: GroupTrip[], locale: string) {
+  const intlLocale = locale === "en" ? "en-GB" : locale === "ar" ? "ar" : "fr-FR";
   const seen = new Map<string, string>();
   for (const trip of trips) {
     const d = new Date(trip.startDate);
     const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     if (!seen.has(value)) {
-      seen.set(value, new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(d));
+      seen.set(value, new Intl.DateTimeFormat(intlLocale, { month: "long", year: "numeric" }).format(d));
     }
   }
   return [...seen.entries()].map(([value, label]) => ({ value, label }));
@@ -51,6 +53,9 @@ function tripCountry(trip: GroupTrip): string | undefined {
 }
 
 export function MarketplaceBrowser() {
+  const locale = useLocale();
+  const t = useTranslations("Marketplace");
+  const tHome = useTranslations("Home");
   const searchParams = useSearchParams();
   const initialType = searchParams.get("type") as TripType | null;
   const initialDestination = searchParams.get("destination");
@@ -60,6 +65,17 @@ export function MarketplaceBrowser() {
     () => [...new Set(getAllAgencies().flatMap((a) => a.zones))].sort(),
     []
   );
+  const destinationLabels = useMemo(() => {
+    const labels: Record<string, string> = {};
+    for (const d of destinations) {
+      try {
+        labels[d] = tHome(`destinations.countries.${d}`);
+      } catch {
+        labels[d] = d;
+      }
+    }
+    return labels;
+  }, [destinations, tHome]);
   const budgetCap = Math.max(...allTrips.map((t) => t.totalPrice)) + 50;
 
   const [filters, setFilters] = useState<TripFiltersState>({
@@ -104,37 +120,32 @@ export function MarketplaceBrowser() {
             setPage(1);
           }}
           destinations={destinations}
-          months={monthOptions(allTrips)}
+          destinationLabels={destinationLabels}
+          months={monthOptions(allTrips, locale)}
           budgetCap={budgetCap}
         />
 
         <div className="flex items-center gap-2">
-          <span className="hidden text-sm text-muted-foreground sm:inline">Trier par</span>
+          <span className="hidden text-sm text-muted-foreground sm:inline">{t("sortBy")}</span>
           <Select value={sort} onValueChange={(v) => setSort(v as SortKey)}>
             <SelectTrigger className="h-10 w-auto gap-2 rounded-lg border bg-card px-3.5 text-sm font-medium shadow-tinted-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="date-asc">Date de départ</SelectItem>
-              <SelectItem value="price-asc">Prix croissant</SelectItem>
-              <SelectItem value="price-desc">Prix décroissant</SelectItem>
-              <SelectItem value="seats-asc">Places restantes</SelectItem>
+              <SelectItem value="date-asc">{t("sortDateAsc")}</SelectItem>
+              <SelectItem value="price-asc">{t("sortPriceAsc")}</SelectItem>
+              <SelectItem value="price-desc">{t("sortPriceDesc")}</SelectItem>
+              <SelectItem value="seats-asc">{t("sortSeatsAsc")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      <p className="text-sm text-muted-foreground">
-        {filtered.length} voyage{filtered.length > 1 ? "s" : ""} disponible
-        {filtered.length > 1 ? "s" : ""}
-      </p>
+      <p className="text-sm text-muted-foreground">{t("results", { n: filtered.length })}</p>
 
       {pageItems.length === 0 ? (
         <div className="flex items-center justify-center rounded-2xl border border-dashed bg-card py-24 text-center">
-          <p className="text-muted-foreground">
-            Aucun voyage ne correspond à ces critères. Essayez d&apos;élargir votre budget ou vos
-            dates.
-          </p>
+          <p className="text-muted-foreground">{t("noResults")}</p>
         </div>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
