@@ -80,6 +80,8 @@ export default auth((req) => {
     const isProtectedClientRoute =
       rest === "/demande" ||
       rest.startsWith("/demande/") ||
+      rest === "/account" ||
+      rest.startsWith("/account/") ||
       (rest.startsWith("/booking/") && !rest.startsWith("/booking/success"));
 
     if (isProtectedClientRoute && (!session?.user || session.user.role !== "CLIENT")) {

@@ -78,6 +78,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async sendVerificationRequest({ identifier, url }) {
         const callbackUrl = new URL(url).searchParams.get("callbackUrl") ?? "";
         const locale = callbackUrl.replace(/^\//, "").split("/")[0] || "fr";
+
+        // The token in the URL is the raw one; the adapter only ever stores
+        // its hash, so a sign-in link can't be reconstructed from the
+        // database. Without this line there is no way to exercise magic-link
+        // sign-in locally — Resend's sandbox sender refuses every recipient
+        // except the account owner, so the email itself usually never lands.
+        // Guarded on NODE_ENV: printing a live credential to the logs would
+        // be a real vulnerability in production.
+        if (process.env.NODE_ENV !== "production") {
+          console.info(`[auth] dev magic link for ${identifier}: ${url}`);
+        }
         const result = await send({
           to: identifier,
           subject: magicLinkEmailSubject(locale),
@@ -87,6 +98,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           // Unlike the fire-and-forget notification emails elsewhere, a
           // failed sign-in email must surface — the visitor has no other way
           // to know the link never arrived.
+          //
+          // `unverified-domain` is called out separately because it is not a
+          // transient fault and no retry will clear it: on Resend's sandbox
+          // sender every recipient except the account owner is rejected, so
+          // magic-link sign-in is effectively off for real users until a
+          // domain is verified. email.service logs the full remediation.
+          if (result.code === "unverified-domain") {
+            throw new Error(
+              "magic-link email blocked: Resend sender domain is not verified — " +
+                "see the [email.service] log line for remediation"
+            );
+          }
           throw new Error(`magic-link email failed: ${result.error}`);
         }
       },

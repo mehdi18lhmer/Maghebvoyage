@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import NextLink from "next/link";
 import { useTranslations } from "next-intl";
-import { Menu } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { Menu, Ticket } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -29,6 +30,12 @@ export function SiteHeader() {
   const t = useTranslations("Nav");
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
+
+  // A signed-in client needs a way back to their bookings that isn't the
+  // confirmation email — without this the account dashboard is only ever
+  // reachable from a link in their inbox.
+  const { data: session } = useSession();
+  const isClient = session?.user?.role === "CLIENT";
 
   const NAV_LINKS = [
     { href: "/voyages", label: t("voyages") },
@@ -108,9 +115,18 @@ export function SiteHeader() {
           >
             <NextLink href="/register/agency">{t("becomeAgency")}</NextLink>
           </Button>
-          <Button size="sm" className="rounded-lg px-4" asChild>
-            <Link href="/login">{t("login")}</Link>
-          </Button>
+          {isClient ? (
+            <Button size="sm" className="rounded-lg px-4" asChild>
+              <Link href="/account/bookings">
+                <Ticket className="size-4" />
+                {t("myBookings")}
+              </Link>
+            </Button>
+          ) : (
+            <Button size="sm" className="rounded-lg px-4" asChild>
+              <Link href="/login">{t("login")}</Link>
+            </Button>
+          )}
         </div>
 
         <Sheet>
@@ -144,9 +160,18 @@ export function SiteHeader() {
                 <Button variant="outline" asChild>
                   <NextLink href="/register/agency">{t("becomeAgency")}</NextLink>
                 </Button>
-                <Button asChild>
-                  <Link href="/login">{t("login")}</Link>
-                </Button>
+                {isClient ? (
+                  <Button asChild>
+                    <Link href="/account/bookings">
+                      <Ticket className="size-4" />
+                      {t("myBookings")}
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button asChild>
+                    <Link href="/login">{t("login")}</Link>
+                  </Button>
+                )}
               </div>
             </div>
           </SheetContent>

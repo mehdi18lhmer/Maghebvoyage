@@ -406,7 +406,11 @@ async function main() {
   if (toubkal) {
     await prisma.booking.upsert({
       where: { confirmationCode: "MV-100001" },
-      update: {},
+      // Re-link the owner on every run. An empty update would leave a booking
+      // seeded before `Booking.userId` existed permanently unowned, which
+      // makes it invisible to the account dashboard — the row is there, the
+      // client is there, and the page still renders "no bookings".
+      update: { userId: client.id },
       create: {
         groupTripId: toubkal.id,
         agencyId: toubkal.agencyId,

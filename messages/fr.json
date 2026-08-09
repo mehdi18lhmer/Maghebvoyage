@@ -341,7 +341,8 @@
     "becomeAgency": "Devenir agence",
     "login": "Se connecter",
     "menu": "Menu",
-    "brand": "MaghrebVoyage"
+    "brand": "MaghrebVoyage",
+    "myBookings": "Mes réservations"
   },
   "Footer": {
     "tagline": "La marketplace des voyages en petit groupe organisés par des agences vérifiées au Maroc, en Tunisie et en Algérie — pensée pour la diaspora.",
@@ -525,5 +526,31 @@
     "gdprConsent": "J'accepte le traitement de mes données personnelles conformément à la <link>politique de confidentialité</link>.",
     "termsConsent": "J'accepte les <link>CGU</link>.",
     "gateNotice": "Créez un compte ou connectez-vous pour continuer."
+  },
+  "Account": {
+    "title": "Mes réservations",
+    "subtitle": "Retrouvez vos voyages réservés, votre code de confirmation et vos options d'annulation.",
+    "emptyTitle": "Aucune réservation pour le moment",
+    "emptyBody": "Dès que vous réserverez un voyage, il apparaîtra ici avec son code de confirmation.",
+    "emptyCta": "Découvrir les voyages",
+    "confirmationCode": "Code de confirmation",
+    "seats": "Participants",
+    "depositPaid": "Acompte payé",
+    "balanceDue": "Reste à régler sur place",
+    "meetingPoint": "Point de rendez-vous",
+    "agency": "Votre agence",
+    "viewTrip": "Voir le voyage",
+    "cancelBooking": "Annuler ma réservation",
+    "cancelConfirm": "Confirmer l'annulation",
+    "cancelAbort": "Retour",
+    "cancelWarning": "Le remboursement de l'acompte est traité manuellement par notre équipe sous quelques jours ouvrés.",
+    "cancelError": "L'annulation a échoué. Réessayez ou contactez votre agence.",
+    "status": {
+      "PENDING_PAYMENT": "Paiement en attente",
+      "CONFIRMED": "Confirmée",
+      "CANCELLED": "Annulée",
+      "REFUNDED": "Remboursée",
+      "NO_SHOW": "Absent"
+    }
   }
 }

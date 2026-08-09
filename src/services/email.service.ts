@@ -31,6 +31,25 @@ export interface SendResult {
   ok: boolean;
   id?: string;
   error?: string;
+  /** Stable, machine-checkable reason — `error` is Resend's raw prose. */
+  code?: "not-configured" | "unverified-domain" | "send-failed" | "exception";
+}
+
+/**
+ * Resend's shared `onboarding@resend.dev` sender is sandboxed: it delivers
+ * *only* to the address that owns the API key, and rejects every other
+ * recipient with a 403. That failure mode is worth naming explicitly — as a
+ * bare "send failed" it reads like a transient network problem, when in fact
+ * no client, agency or admin email will ever arrive until a real domain is
+ * verified, and the sign-in magic link is dead for every visitor.
+ */
+function isUnverifiedDomainError(message: string): boolean {
+  const m = message.toLowerCase();
+  return (
+    m.includes("you can only send testing emails") ||
+    m.includes("verify a domain") ||
+    (m.includes("domain") && m.includes("not verified"))
+  );
 }
 
 export async function send({
@@ -45,14 +64,24 @@ export async function send({
   const resend = getClient();
   if (!resend) {
     console.warn("[email.service] RESEND_API_KEY missing — skipped", { subject });
-    return { ok: false, error: "not-configured" };
+    return { ok: false, error: "not-configured", code: "not-configured" };
   }
 
   try {
     const { data, error } = await resend.emails.send({ from: FROM, to, subject, html });
     if (error) {
+      if (isUnverifiedDomainError(error.message)) {
+        console.error(
+          `[email.service] BLOCKED — the sender "${FROM}" is not a verified domain, so Resend ` +
+            `refused delivery to ${to}. Until a domain is verified at resend.com/domains and ` +
+            `RESEND_FROM is changed to an address on it, no transactional email (E1–E14) and ` +
+            `no sign-in magic link will reach anyone but the Resend account owner.`,
+          { subject, error: error.message }
+        );
+        return { ok: false, error: error.message, code: "unverified-domain" };
+      }
       console.error("[email.service] send failed", { subject, error: error.message });
-      return { ok: false, error: error.message };
+      return { ok: false, error: error.message, code: "send-failed" };
     }
     console.info("[email.service] sent", { subject, id: data?.id });
     return { ok: true, id: data?.id };
@@ -61,7 +90,7 @@ export async function send({
       subject,
       reason: err instanceof Error ? err.message : "unknown",
     });
-    return { ok: false, error: "exception" };
+    return { ok: false, error: "exception", code: "exception" };
   }
 }
 

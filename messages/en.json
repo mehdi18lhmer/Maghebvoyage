@@ -341,7 +341,8 @@
     "becomeAgency": "Become an agency",
     "login": "Sign in",
     "menu": "Menu",
-    "brand": "MaghrebVoyage"
+    "brand": "MaghrebVoyage",
+    "myBookings": "My bookings"
   },
   "Footer": {
     "tagline": "The marketplace for small-group trips organized by verified agencies in Morocco, Tunisia and Algeria — built for the diaspora.",
@@ -525,5 +526,31 @@
     "gdprConsent": "I agree to the processing of my personal data in accordance with the <link>privacy policy</link>.",
     "termsConsent": "I agree to the <link>Terms of Service</link>.",
     "gateNotice": "Create an account or sign in to continue."
+  },
+  "Account": {
+    "title": "My bookings",
+    "subtitle": "Your booked trips, confirmation codes and cancellation options, all in one place.",
+    "emptyTitle": "No bookings yet",
+    "emptyBody": "As soon as you book a trip, it will appear here with its confirmation code.",
+    "emptyCta": "Browse trips",
+    "confirmationCode": "Confirmation code",
+    "seats": "Travellers",
+    "depositPaid": "Deposit paid",
+    "balanceDue": "Balance due on site",
+    "meetingPoint": "Meeting point",
+    "agency": "Your agency",
+    "viewTrip": "View trip",
+    "cancelBooking": "Cancel my booking",
+    "cancelConfirm": "Confirm cancellation",
+    "cancelAbort": "Back",
+    "cancelWarning": "Deposit refunds are processed manually by our team within a few business days.",
+    "cancelError": "Cancellation failed. Please try again or contact your agency.",
+    "status": {
+      "PENDING_PAYMENT": "Payment pending",
+      "CONFIRMED": "Confirmed",
+      "CANCELLED": "Cancelled",
+      "REFUNDED": "Refunded",
+      "NO_SHOW": "No show"
+    }
   }
 }

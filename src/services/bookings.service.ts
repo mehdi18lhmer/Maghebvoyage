@@ -228,6 +228,37 @@ export async function confirmBookingFromWebhook(params: {
 }
 
 /**
+ * Every booking belonging to one client account — the account dashboard's
+ * list, and the read side of the same ownership rule `cancelBookingByUser`
+ * enforces on the write side: scoped by `userId`, never by email. Email is
+ * denormalized onto Booking and is not a credential — two accounts could
+ * share one, and a client can change theirs.
+ *
+ * Soonest departure first among upcoming trips, so the thing a client is
+ * about to travel on is what they see when the page opens.
+ */
+export async function listBookingsForUser(userId: string) {
+  return prisma.booking.findMany({
+    where: { userId },
+    include: {
+      groupTrip: {
+        select: {
+          slug: true,
+          title: true,
+          destination: true,
+          startDate: true,
+          endDate: true,
+          meetingPoint: true,
+          status: true,
+        },
+      },
+      agency: { select: { name: true, contactEmail: true, contactPhone: true } },
+    },
+    orderBy: [{ groupTrip: { startDate: "asc" } }],
+  });
+}
+
+/**
  * §G.1 — client cancels from their account dashboard (superseding the
  * original token-link design once clients had accounts to log into — see
  * CLAUDE.md's client-accounts pivot). Ownership is enforced by matching the
