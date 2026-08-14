@@ -6,6 +6,14 @@ A marketplace where verified travel agencies publish fixed-price group trips and
 
 **Stack:** Next.js 16 (App Router) · TypeScript · Tailwind + shadcn/ui · Prisma 7 + PostgreSQL · NextAuth v5 · Stripe Checkout · Cloudinary · Groq (AI chat) + Vapi (voice) · Upstash Redis · Resend.
 
+## Contents
+
+- [Prerequisites](#prerequisites)
+- [Setup](#setup)
+- [Scripts](#scripts)
+- [Project structure](#project-structure)
+- [Known gaps](#known-gaps)
+
 ## Prerequisites
 
 - Node.js 20+
