@@ -1,5 +1,7 @@
 # MaghrebVoyage
 
+**Live demo:** https://maghebvoyage.vercel.app
+
 A marketplace where verified travel agencies publish fixed-price group trips and sell seats online, with secure card deposits via Stripe — built against the `CDC_FINAL_MAGHREBVOYAGE.pdf` spec. See [CLAUDE.md](CLAUDE.md) for the full product/architecture brief and business rules.
 
 **Stack:** Next.js 16 (App Router) · TypeScript · Tailwind + shadcn/ui · Prisma 7 + PostgreSQL · NextAuth v5 · Stripe Checkout · Cloudinary · Groq (AI chat) + Vapi (voice) · Upstash Redis · Resend.
