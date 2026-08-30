@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { NextIntlClientProvider } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 
@@ -8,13 +7,11 @@ export function generateStaticParams() {
 }
 
 /**
- * Wraps every client-facing page in the trilingual message provider.
+ * Validates the locale segment and enables static rendering for public pages.
  *
- * Deliberately doesn't redeclare `<html>`/`<body>` — the root layout
- * (`src/app/layout.tsx`) owns those for the whole app, including the
- * agency/admin/auth routes that live outside this segment and stay
- * French/LTR. This layout's only job is making translations available to
- * every "use client" component nested under it.
+ * The root layout owns `<html>`/`<body>` and the single application-wide
+ * `NextIntlClientProvider`, including for agency/admin routes that do not
+ * carry a locale segment.
  */
 export default async function LocaleLayout({
   children,
@@ -32,5 +29,5 @@ export default async function LocaleLayout({
   // falls back to dynamic rendering for anything under [locale].
   setRequestLocale(locale);
 
-  return <NextIntlClientProvider>{children}</NextIntlClientProvider>;
+  return children;
 }
