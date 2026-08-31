@@ -6,6 +6,10 @@ const originalLoad = Module._load;
 
 Module._extensions[".css"] = (module) => module._compile("module.exports = {};", module.filename);
 Module._load = function loadForTests(request, parent, isMain) {
+  if (request === "server-only") {
+    return {};
+  }
+
   if (request === "next/font/google") {
     return {
       Geist: () => ({ variable: "--font-geist-sans" }),
