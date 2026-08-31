@@ -1,5 +1,4 @@
 import type { MetadataRoute } from "next";
-import { prisma } from "@/lib/prisma";
 
 // Without this, Next prerenders the sitemap once at build time and freezes
 // it — a trip an agency publishes tomorrow wouldn't appear until the next
@@ -14,7 +13,11 @@ export const revalidate = 3600;
  * CANCELLED trips or PENDING/REJECTED agencies.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const url = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const url =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3000");
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${url}/`, changeFrequency: "daily", priority: 1 },
@@ -26,6 +29,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${url}/legal/remboursements`, changeFrequency: "yearly", priority: 0.1 },
     { url: `${url}/legal/mentions`, changeFrequency: "yearly", priority: 0.1 },
   ];
+
+  // Preview deployments can intentionally run without production database
+  // credentials. Keep the public sitemap available instead of failing the
+  // entire build; production still appends live trips and agencies below.
+  if (!process.env.DATABASE_URL) {
+    return staticRoutes;
+  }
+
+  const { prisma } = await import("@/lib/prisma");
 
   const [trips, agencies] = await Promise.all([
     prisma.groupTrip.findMany({

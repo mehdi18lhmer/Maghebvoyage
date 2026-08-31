@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
-import { getLocale } from "next-intl/server";
+import { getLocale, getMessages, getTimeZone } from "next-intl/server";
 import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthSessionProvider } from "@/components/providers/session-provider";
+import { AppIntlProvider } from "@/components/providers/app-intl-provider";
 import { directionFor } from "@/i18n/routing";
 
 const geistSans = Geist({
@@ -120,6 +121,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // <html lang>/<html dir> get set; next-intl's request config (src/i18n/
   // request.ts) is what makes getLocale() safe to call unconditionally here.
   const locale = await getLocale();
+  const [messages, timeZone] = await Promise.all([getMessages({ locale }), getTimeZone({ locale })]);
   const dir = directionFor(locale);
 
   return (
@@ -133,12 +135,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd()) }}
         />
-        <AuthSessionProvider>
-          <TooltipProvider>
-            {children}
-            <Toaster />
-          </TooltipProvider>
-        </AuthSessionProvider>
+        <AppIntlProvider locale={locale} messages={messages} timeZone={timeZone}>
+          <AuthSessionProvider>
+            <TooltipProvider>
+              {children}
+              <Toaster />
+            </TooltipProvider>
+          </AuthSessionProvider>
+        </AppIntlProvider>
       </body>
     </html>
   );
