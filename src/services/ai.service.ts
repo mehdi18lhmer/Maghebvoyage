@@ -24,7 +24,11 @@ import type { GroupTrip } from "@/lib/types";
  */
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-const MODEL = "llama-3.3-70b-versatile";
+const DEFAULT_MODEL = "openai/gpt-oss-120b";
+
+function groqModel(): string {
+  return process.env.GROQ_MODEL?.trim() || DEFAULT_MODEL;
+}
 
 /**
  * Appended to every system prompt below. Deliberately just a language
@@ -97,7 +101,7 @@ async function callGroq(
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: MODEL,
+        model: groqModel(),
         messages,
         temperature: jsonMode ? 0 : 0.3,
         max_tokens: 700,
